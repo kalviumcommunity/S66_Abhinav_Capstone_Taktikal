@@ -4,7 +4,7 @@ const DbConnection = require("./db/DbConnection");
 
 //Routes importing
 const coachRoutes = require("./routes/coachRoutes");
-const trainingRoutes = require("./routes/trainingRoutes");
+const athleteRoutes = require("./routes/athleteRoutes");
 
 DbConnection();
 
@@ -14,7 +14,7 @@ const PORT = process.env.PORT;
 
 //Routes
 app.use("/api/coaches", coachRoutes);
-app.use('/api/athletes', trainingRoutes);
+app.use('/api/athletes', athleteRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server started at http://localhost:${PORT}`);
