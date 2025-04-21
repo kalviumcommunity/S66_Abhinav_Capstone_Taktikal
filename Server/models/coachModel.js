@@ -22,7 +22,7 @@ const coachSchema = mongoose.Schema(
         },
         age: {
             type: Number,
-            default: ""
+            default: 0
         },
         sport: {
             type: String,
@@ -39,7 +39,8 @@ const coachSchema = mongoose.Schema(
             Twitter: String,
             Facebook: String
         }
-    }
+    },
+    { timestamps: true }
 );
 
 module.exports = mongoose.model('Coach', coachSchema);
