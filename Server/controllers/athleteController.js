@@ -43,4 +43,22 @@ const getAthleteById = async (req, res) => {
     }
 };
 
-module.exports = { addAthlete, getAllAthletes, getAthleteById  };
+const updateAthlete = async (req, res) => {
+    const { id } = req.params;
+    const { position, speed, strength, stamina } = req.body;
+    try {
+        const updatedAthlete = await Athlete.findByIdAndUpdate(
+        id,
+        { position, speed, strength, stamina },
+        { new: true }
+    );
+    if (!updatedAthlete) {
+        return res.status(404).json({ message: "Athlete not found" });
+    }
+    res.status(200).json({ message: "Athlete updated successfully", athlete: updatedAthlete });
+    } catch (error) {
+        res.status(500).json({ message: "Server Error" });
+    }
+};
+
+module.exports = { addAthlete, getAllAthletes, getAthleteById, updateAthlete };
