@@ -47,4 +47,16 @@ const login = async (req, res) => {
     }
 };
 
-module.exports = { signup, login };
+const getCoach = async (req, res) => {
+    try {
+        const coach = await Coach.findOne(); 
+        if (!coach) {
+            return res.status(404).json({ message: "Coach not found" });
+        }
+        res.status(200).json(coach);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { signup, login, getCoach };
