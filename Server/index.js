@@ -1,12 +1,10 @@
 require("dotenv").config();
 const express = require("express");
-const DbConnection = require("./db/DbConnection");
 
 //Routes importing
 const coachRoutes = require("./routes/coachRoutes");
 const athleteRoutes = require("./routes/athleteRoutes");
 
-DbConnection();
 
 const app = express();
 app.use(express.json());
