@@ -16,8 +16,14 @@ const athleteSchema = mongoose.Schema(
         },
         stamina: { 
             type: Number, min: 1, max: 10 
+        },
+        coach: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Coach',
+            required: true
         }
-    }
+    },
+    { timestamps: true }
 );
 
 module.exports = mongoose.model('Athlete', athleteSchema);
