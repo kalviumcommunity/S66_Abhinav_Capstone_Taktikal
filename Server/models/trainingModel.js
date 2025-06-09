@@ -16,6 +16,16 @@ const trainingSchema = mongoose.Schema(
             speed: { type: Number, min: 1, max: 10 },
             strength: { type: Number, min: 1, max: 10 },
             stamina: { type: Number, min: 1, max: 10 }
+        },
+        athlete: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Athlete',
+            required: true
+        },
+        coach: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Coach',
+            required: true
         }
     },
     { timestamps: true }
