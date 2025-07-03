@@ -1,6 +1,8 @@
 # Project Title:  
 **Sports Coach Management App**
 
+**Frontend deploy link :- https://taktikal.netlify.app/ -**
+
 ## Project Overview:  
 This project is built for sports coaches to manage athletes, plan training, track performance, and create game strategies. It also includes an AI chatbot to assist with training suggestions, diet plans, and motivational tips.
 
