@@ -1,9 +1,11 @@
 import React from 'react'
-import HomePage from './pages/HomePage/HomePage'
+import Sidebar from './components/Sidebar'
+// import HomePage from './pages/HomePage/HomePage'
 
 const App = () => {
   return (
-    <HomePage/>
+    // <HomePage/>
+    <Sidebar/>
   )
 }
 
