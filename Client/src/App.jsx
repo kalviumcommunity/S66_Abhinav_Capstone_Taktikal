@@ -1,13 +1,16 @@
 import React from 'react'
-import Sidebar from './components/Sidebar'
+import Login from './pages/Register/LogIn'
+// import Sidebar from './components/Sidebar'
 // import HomePage from './pages/HomePage/HomePage'
-import SignUp from './pages/Register/SignUp'
+// import SignUp from './pages/Register/SignUp'
+
 
 const App = () => {
   return (
     // <HomePage/>
     // <Sidebar/>
-    <SignUp/>
+    // <SignUp/>
+    <Login/>
   )
 }
 
