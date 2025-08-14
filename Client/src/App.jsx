@@ -1,8 +1,9 @@
 import React from 'react'
-import Login from './pages/Register/LogIn'
+// import Login from './pages/Register/LogIn'
 // import Sidebar from './components/Sidebar'
 // import HomePage from './pages/HomePage/HomePage'
 // import SignUp from './pages/Register/SignUp'
+import Profile from './pages/UserProfile/Profile'
 
 
 const App = () => {
@@ -10,7 +11,8 @@ const App = () => {
     // <HomePage/>
     // <Sidebar/>
     // <SignUp/>
-    <Login/>
+    // <Login/>
+    <Profile/>
   )
 }
 

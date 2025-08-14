@@ -20,7 +20,7 @@ const HomePage = () => {
 
         {/* Navbar */}
         <nav className="flex justify-between items-center px-6 sm:px-10 py-6 ">
-            <img src={taktikalLogo} alt="Logo" className="w-24" />
+            <img src={taktikalLogo} alt="Logo" className="w-32" />
             <ul className="hidden md:flex gap-6 text-md">
             <li className="hover:underline cursor-pointer">Overview</li>
             <li className="hover:underline cursor-pointer">Features</li>
