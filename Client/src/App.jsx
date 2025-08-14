@@ -4,6 +4,7 @@ import React from 'react'
 // import HomePage from './pages/HomePage/HomePage'
 // import SignUp from './pages/Register/SignUp'
 import Profile from './pages/UserProfile/Profile'
+import Athletes from './pages/Athletes/Athletes'
 
 
 const App = () => {
@@ -12,7 +13,8 @@ const App = () => {
     // <Sidebar/>
     // <SignUp/>
     // <Login/>
-    <Profile/>
+    // <Profile/>
+    <Athletes/>
   )
 }
 
