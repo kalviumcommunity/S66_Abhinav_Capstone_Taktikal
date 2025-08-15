@@ -9,4 +9,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      external: ['recharts'] // Explicitly mark "recharts" as external
+    }
+  }
 })
