@@ -1,5 +1,6 @@
 import React from 'react'
-import Dashboard from './pages/Dashboard/Dashboard'
+// import Dashboard from './pages/Dashboard/Dashboard'
+import Tactics from './pages/Tactics/Tactics'
 // import Login from './pages/Register/LogIn'
 // import Sidebar from './components/Sidebar'
 // import HomePage from './pages/HomePage/HomePage'
@@ -16,7 +17,8 @@ const App = () => {
     // <Login/>
     // <Profile/>
     // <Athletes/>
-    <Dashboard/>
+    // <Dashboard/>
+    <Tactics/>
   )
 }
 
