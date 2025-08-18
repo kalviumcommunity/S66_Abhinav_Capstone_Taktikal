@@ -1,5 +1,4 @@
 import React, { useState, useRef } from "react";
-import Sidebar from "../../components/Sidebar";
 import tacticsIcon from "../../assets/tactics@1x copy.svg";
 import footballField from "../../assets/Football field@1x.png";
 import calendarIcon from "../../assets/calendar@1x.svg";
@@ -18,6 +17,23 @@ export default function Tactics() {
         { text: "Conditioning exercises", checked: false },
     ]);
     const [newActivity, setNewActivity] = useState("");
+
+    // Search state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [showResults, setShowResults] = useState(false);
+
+    // Search data
+    const searchData = [
+        { id: 1, title: '4-3-3 Formation', type: 'formation' },
+        { id: 2, title: '4-4-2 Formation', type: 'formation' },
+        { id: 3, title: 'Custom Formation', type: 'formation' },
+        { id: 4, title: 'Warm-up drills', type: 'training' },
+        { id: 5, title: 'Formation practice', type: 'training' },
+        { id: 6, title: 'Conditioning exercises', type: 'training' },
+        { id: 7, title: 'Training Checklist', type: 'training' },
+        { id: 8, title: 'Formation Type', type: 'formation' },
+    ];
 
     // Formation positions (relative to container width/height percentages)
     const getFormationPositions = (formation, containerWidth = 800, containerHeight = 730) => {
@@ -176,58 +192,121 @@ export default function Tactics() {
         setActivities((prev) => prev.filter((_, i) => i !== index));
     };
 
-    return (
-        <div className="flex min-h-screen bg-[#212121]" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
-            {/* Sidebar */}
-            <Sidebar />
+    // Search functionality
+    const handleSearch = (query) => {
+        setSearchQuery(query);
+        if (query.trim() === '') {
+            setSearchResults([]);
+            setShowResults(false);
+            return;
+        }
 
-            {/* Main Content */}
-            <div className="flex-1 p-6 space-y-6">
+        const filtered = searchData.filter(item =>
+            item.title.toLowerCase().includes(query.toLowerCase())
+        );
+
+        setSearchResults(filtered);
+        setShowResults(true);
+    };
+
+    const handleResultClick = (result) => {
+        if (result.type === 'formation') {
+            if (result.title.includes('4-3-3')) {
+                changeFormation('4-3-3');
+            } else if (result.title.includes('4-4-2')) {
+                changeFormation('4-4-2');
+            } else if (result.title.includes('Custom')) {
+                enableCustomMode();
+            }
+        }
+        setShowResults(false);
+        setSearchQuery('');
+    };
+
+    return (
+        <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-[#212121] min-h-screen" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
                 {/* Header */}
-                <div className="flex justify-between items-center">
-                    <h2 className="text-2xl font-bold" style={{ color: "#F5F5DC" }}>
-                        Sports Tactics & Training
-                    </h2>
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center bg-white rounded-full px-3 py-1">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                    <div>
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#F5F5DC] mb-2 leading-tight">
+                            Sports Tactics & Training
+                        </h1>
+                        <p className="text-base md:text-lg text-[#F5F5DC]/80 font-normal leading-relaxed">
+                            Design formations, plan strategies, and track training progress
+                        </p>
+                    </div>
+                    <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
+                        <div className="relative flex items-center bg-white rounded-full px-3 py-2 shadow-sm">
                             <img src={searchIcon} alt="Search" className="w-4 h-4 mr-2" />
                             <input
                                 type="text"
-                                placeholder="Search..."
-                                className="outline-none text-sm bg-transparent"
+                                placeholder="Search tactics..."
+                                value={searchQuery}
+                                onChange={(e) => handleSearch(e.target.value)}
+                                onFocus={() => searchQuery && setShowResults(true)}
+                                onBlur={() => setTimeout(() => setShowResults(false), 200)}
+                                className="outline-none text-sm bg-transparent font-normal w-full sm:w-32 md:w-40"
                             />
+
+                            {/* Search Results Dropdown */}
+                            {showResults && (
+                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto z-50">
+                                    {searchResults.length > 0 ? (
+                                        searchResults.map((result) => (
+                                            <div
+                                                key={result.id}
+                                                onClick={() => handleResultClick(result)}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-black border-b border-gray-100 last:border-b-0 text-sm"
+                                            >
+                                                {result.title}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="px-4 py-2 text-gray-500 text-sm">
+                                            No results found
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
-                        <img src={notificationIcon} alt="Notification" className="w-6 h-6 cursor-pointer" />
+                        <img src={notificationIcon} alt="Notifications" className="w-6 h-6 cursor-pointer hover:opacity-80 transition duration-300" />
                     </div>
                 </div>
 
                 {/* Formation & Checklist */}
-                <div className="flex gap-6">
+                <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
                     {/* Left Column */}
-                    <div className="w-1/4 space-y-6">
+                    <div className="w-full xl:w-1/4 space-y-4 md:space-y-6 order-2 xl:order-1">
                         {/* Formation Type */}
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] rounded-lg p-4">
-                            <div className="flex justify-between items-center mb-3">
-                                <h3 className="font-bold" style={{ color: "#F5F5DC" }}>Formation Type</h3>
-                                <div className="flex gap-2">
-                                    <img src={calendarIcon} alt="Calendar" className="w-5 h-5 cursor-pointer" />
-                                    <img src={tacticsIcon} alt="Tactics" className="w-5 h-5 cursor-pointer" />
+                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-lg p-4 md:p-5 shadow-lg">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+                                <h3 className="font-bold text-[#F5F5DC] text-lg md:text-xl leading-tight">Formation Type</h3>
+                                <div className="flex gap-3">
+                                    <img src={calendarIcon} alt="Calendar" className="w-5 h-5 md:w-6 md:h-6 cursor-pointer hover:opacity-80 transition duration-300" />
+                                    <img src={tacticsIcon} alt="Tactics" className="w-5 h-5 md:w-6 md:h-6 cursor-pointer hover:opacity-80 transition duration-300" />
                                 </div>
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                                 {["4-3-3", "4-4-2"].map((f) => (
                                     <div
                                         key={f}
                                         onClick={() => changeFormation(f)}
-                                        className={`p-2 rounded cursor-pointer ${formation === f ? "bg-[#483C32]" : "bg-[#00000050]"}`}
-                                        style={{ color: "#F5F5DC" }}
+                                        className={`p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-300 text-base md:text-lg font-normal ${
+                                            formation === f
+                                                ? "bg-[#483C32] text-white shadow-md font-bold"
+                                                : "bg-[#00000050] text-[#F5F5DC] hover:bg-[#483C32]/30 hover:text-white"
+                                        }`}
                                     >
                                         {f}
                                     </div>
                                 ))}
                                 <button
                                     onClick={enableCustomMode}
-                                    className={`w-full border border-gray-400 rounded p-2 text-sm ${customMode ? "bg-[#483C32] text-white" : "text-gray-300"}`}
+                                    className={`w-full border border-[#483C32] rounded-lg p-3 md:p-4 text-sm md:text-base font-normal transition-all duration-300 ${
+                                        customMode
+                                            ? "bg-[#483C32] text-white shadow-md font-bold"
+                                            : "bg-[#00000050] text-[#F5F5DC] hover:bg-[#483C32]/30 hover:text-white"
+                                    }`}
                                 >
                                     + Create Custom Formation
                                 </button>
@@ -235,19 +314,19 @@ export default function Tactics() {
                         </div>
 
                         {/* Training Checklist */}
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] rounded-lg p-4">
-                            <h3 className="font-bold mb-3" style={{ color: "#F5F5DC" }}>Training Checklist</h3>
+                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-lg p-4 md:p-5 shadow-lg">
+                            <h3 className="font-bold mb-4 text-[#F5F5DC] text-lg md:text-xl leading-tight">Training Checklist</h3>
                             <div className="flex gap-2 mb-3">
                                 <input
                                     type="text"
                                     value={newActivity}
                                     onChange={(e) => setNewActivity(e.target.value)}
                                     placeholder="Add training activity..."
-                                    className="flex-1 rounded p-1 text-sm bg-[#F5F5DC] text-[#212121] placeholder-gray-500"
+                                    className="flex-1 rounded p-1 text-sm bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] text-[#F5F5DC] placeholder-[#F5F5DC]/70"
                                 />
                                 <button
                                     onClick={addActivity}
-                                    className="bg-[#483C32] text-white px-3 py-1 rounded"
+                                    className="bg-[#483C32] text-[#F5F5DC] px-3 py-1 rounded hover:bg-[#5a4a3e] transition duration-300"
                                 >
                                     Add
                                 </button>
@@ -271,16 +350,15 @@ export default function Tactics() {
                     </div>
 
                     {/* Right Column - Pitch */}
-                    <div className="flex-1">
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] p-2 rounded-t-lg flex justify-between items-center" style={{ color: "#F5F5DC" }}>
-                            <span>Football: {formation} Formation</span>
-                            {customMode && <span className="text-sm text-yellow-300">Custom Mode Active - Drag to position players</span>}
+                    <div className="flex-1 w-full xl:w-3/4 order-1 xl:order-2">
+                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] p-3 md:p-4 rounded-t-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[#F5F5DC] border border-[#483C32] border-b-0">
+                            <span className="text-base md:text-lg lg:text-xl font-bold leading-tight">Football: {formation} Formation</span>
+                            {customMode && <span className="text-sm md:text-base text-yellow-300 font-normal bg-yellow-300/10 px-2 py-1 rounded">Custom Mode Active - Drag to position players</span>}
                         </div>
                         <div
-                            className="relative border-2 border-[#483C32] rounded-b-lg"
+                            className="relative border-2 border-[#483C32] rounded-b-lg w-full h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[730px]"
                             ref={pitchRef}
                             style={{
-                                height: "730px",
                                 backgroundImage: `url(${footballField})`,
                                 backgroundColor: "#8FBC8F",
                                 backgroundSize: "contain",
@@ -303,6 +381,5 @@ export default function Tactics() {
                     </div>
                 </div>
             </div>
-        </div>
     );
 }

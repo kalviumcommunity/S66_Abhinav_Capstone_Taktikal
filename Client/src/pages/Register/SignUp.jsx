@@ -1,15 +1,42 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import emailIcon from "../../assets/email2.svg";
 import eyeOpenIcon from "../../assets/eye open.svg";
 import passwordLockIcon from "../../assets/password lock.svg";
+import taktikalLogo from "../../assets/TAKTIKAL.svg";
 
 export default function SignUp() {
+    const navigate = useNavigate();
+
+    const handleLogin = () => {
+        navigate('/login');
+    };
+
+    const handleRegister = () => {
+        // Here you would typically handle the registration logic
+        // For now, we'll navigate to the profile page for setup
+        navigate('/profile');
+    };
+
+    const handleHome = () => {
+        navigate('/');
+    };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#372E28] font-sans">
-        <div className="flex rounded-xl shadow-lg overflow-hidden max-w-4xl w-full mx-6">
-            
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#212121] font-sans">
+        {/* Logo at the top */}
+        <div className="mb-8">
+            <img
+                src={taktikalLogo}
+                alt="Taktikal Logo"
+                className="w-40 cursor-pointer hover:opacity-80 transition duration-300"
+                onClick={handleHome}
+            />
+        </div>
+        <div className="flex rounded-xl shadow-lg overflow-hidden max-w-4xl w-full mx-6 border border-[#483C32]">
+
             {/* Left Side - Register */}
-            <div className="bg-[#1D1714] text-[#B49E92] p-10 flex flex-col gap-5 w-1/2">
+            <div className="bg-[#000000]/30 text-[#B49E92] p-10 flex flex-col gap-5 w-1/2">
             <h2 className="font-semibold text-2xl text-center mb-5">Register</h2>
 
             <input
@@ -52,27 +79,33 @@ export default function SignUp() {
                 </a>
             </label>
 
-            <button className="bg-[#B49E92] text-[#1D1714] font-semibold rounded-md py-3 mt-5 cursor-pointer text-base">
+            <button
+                onClick={handleRegister}
+                className="bg-[#B49E92] text-[#1D1714] font-semibold rounded-md py-3 mt-5 cursor-pointer text-base hover:bg-[#A08B7F] transition duration-300"
+            >
                 Register
             </button>
 
             <div className="text-center text-xs mt-5 text-[#B49E92]">
                 Already have an account?{" "}
-                <a href="#" className="underline">
+                <button onClick={handleLogin} className="underline hover:text-white transition duration-300">
                 Login
-                </a>
+                </button>
             </div>
             </div>
 
             {/* Right Side - Login */}
-            <div className="bg-gradient-to-r from-[#2E241D] to-[#4B3E35] text-[#B49E92] p-10 w-1/2 flex flex-col justify-center">
+            <div className="bg-gradient-to-br from-[#483C32] to-[#212121] text-[#F5F5DC] p-10 w-1/2 flex flex-col justify-center">
             <h2 className="text-2xl font-bold mb-4">Hello, Friend</h2>
             <p className="text-sm leading-tight mb-8">
                 Start your journey with the largest community of innovators in sports
                 coaching and athlete development.
             </p>
 
-            <button className="bg-[#B49E92] text-[#4B3E35] font-semibold rounded-md py-3 cursor-pointer text-base">
+            <button
+                onClick={handleLogin}
+                className="bg-[#212121] text-[#F5F5DC] font-semibold rounded-md py-3 cursor-pointer text-base hover:bg-[#000000] transition duration-300 border border-[#483C32]"
+            >
                 Login
             </button>
             </div>
