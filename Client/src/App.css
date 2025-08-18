@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+/* Global font family - Roboto */
+* {
+  font-family: 'Roboto', sans-serif;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: 'Roboto', sans-serif;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+/* Typography Scale */
+.text-xs { font-size: 0.75rem; line-height: 1.4; }
+.text-sm { font-size: 0.875rem; line-height: 1.4; }
+.text-base { font-size: 1rem; line-height: 1.5; }
+.text-lg { font-size: 1.125rem; line-height: 1.5; }
+.text-xl { font-size: 1.25rem; line-height: 1.4; }
+.text-2xl { font-size: 1.5rem; line-height: 1.3; }
+.text-3xl { font-size: 1.875rem; line-height: 1.2; }
+
+/* Font weights */
+.font-normal { font-weight: 400; }
+.font-bold { font-weight: 700; }
+
+/* Improve touch targets on mobile */
+@media (max-width: 768px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better spacing for mobile */
+  .space-y-6 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  .space-y-4 > * + * {
+    margin-top: 0.75rem !important;
+  }
+}
+
+/* Smooth transitions for better UX */
+* {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Focus styles for accessibility */
+button:focus, input:focus, [tabindex]:focus {
+  outline: 2px solid #483C32;
+  outline-offset: 2px;
+}
+
+/* Text rendering optimization */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}

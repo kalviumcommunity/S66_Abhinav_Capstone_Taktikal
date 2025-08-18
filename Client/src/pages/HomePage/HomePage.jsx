@@ -1,4 +1,5 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import taktikalLogo from '../../assets/TAKTIKAL.svg'
 import athleteIcon from '../../assets/athlete management@3x.png'
@@ -13,6 +14,27 @@ import githubIcon from '../../assets/github@3x.png'
 
 
 const HomePage = () => {
+    const navigate = useNavigate()
+
+    const handleSignUp = () => {
+        navigate('/signup')
+    }
+
+    const handleDashboard = () => {
+        navigate('/dashboard')
+    }
+
+    const handleLogin = () => {
+        navigate('/login')
+    }
+
+    const scrollToSection = (sectionId) => {
+        const element = document.getElementById(sectionId)
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' })
+        }
+    }
+
     return (
         <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-[#272727] via-[#483C32] to-[#272727] text-white">
 
@@ -20,14 +42,54 @@ const HomePage = () => {
 
         {/* Navbar */}
         <nav className="flex justify-between items-center px-6 sm:px-10 py-6 ">
-            <img src={taktikalLogo} alt="Logo" className="w-32" />
+            <img
+                src={taktikalLogo}
+                alt="Logo"
+                className="w-32 cursor-pointer hover:opacity-80 transition duration-300"
+                onClick={() => navigate('/')}
+            />
             <ul className="hidden md:flex gap-6 text-md">
-            <li className="hover:underline cursor-pointer">Overview</li>
-            <li className="hover:underline cursor-pointer">Features</li>
-            <li className="hover:underline cursor-pointer">About Us</li>
-            <li className="hover:underline cursor-pointer">Support</li>
+                <li
+                    className="hover:underline cursor-pointer"
+                    onClick={() => scrollToSection('overview')}
+                >
+                    Overview
+                </li>
+                <li
+                    className="hover:underline cursor-pointer"
+                    onClick={() => scrollToSection('features')}
+                >
+                    Features
+                </li>
+                <li
+                    className="hover:underline cursor-pointer"
+                    onClick={() => scrollToSection('about')}
+                >
+                    About Us
+                </li>
+                <li
+                    className="hover:underline cursor-pointer"
+                    onClick={() => scrollToSection('support')}
+                >
+                    Support
+                </li>
             </ul>
-            <button className="border border-white px-4 py-2 rounded-full text-sm cursor-pointer">SignUp</button>
+
+
+            <div className="flex gap-3">
+                <button
+                    onClick={handleLogin}
+                    className="border border-white px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-white hover:text-black transition duration-300"
+                >
+                    Login
+                </button>
+                <button
+                    onClick={handleSignUp}
+                    className="bg-white text-black px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition duration-300"
+                >
+                    SignUp
+                </button>
+            </div>
         </nav>
 
 
@@ -45,7 +107,10 @@ const HomePage = () => {
                     </p>
                 </div>
                 <div>
-                    <button className="px-12 py-4 text-white text-lg sm:text-2xl font-normal rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition duration-300">
+                    <button
+                        onClick={handleDashboard}
+                        className="px-12 py-4 text-white text-lg sm:text-2xl font-normal rounded-full bg-white/10 backdrop-blur-md hover:bg-white/20 transition duration-300"
+                    >
                         Dashboard
                     </button>
                 </div>
@@ -56,7 +121,7 @@ const HomePage = () => {
 
 
         {/* Overview */}
-        <section className="mt-[150px] px-6 sm:px-20">
+        <section id="overview" className="mt-[150px] px-6 sm:px-20">
             <div className="text-center mb-10">
             <h2 className="text-4xl font-bold">Overview</h2>
             <div className="w-12 h-1 bg-[#a38b82] mx-auto mt-2 rounded-full"></div>
@@ -78,7 +143,7 @@ const HomePage = () => {
 
 
         {/* Features */}
-        <section className="mt-[150px] px-6 sm:px-20">
+        <section id="features" className="mt-[150px] px-6 sm:px-20">
             <div className="text-center mb-12">
             <h2 className="text-4xl font-bold">Features</h2>
             <div className="w-12 h-1 bg-[#a38b82] mx-auto mt-2 rounded-full"></div>
@@ -108,7 +173,7 @@ const HomePage = () => {
 
 
         {/* About Us */}
-        <section className="mt-[150px] px-6 sm:px-20">
+        <section id="about" className="mt-[150px] px-6 sm:px-20">
             <div className="text-center mb-12">
             <h2 className="text-4xl font-bold">About Us</h2>
             <div className="w-12 h-1 bg-[#a38b82] mx-auto mt-2 rounded-full"></div>
@@ -126,7 +191,7 @@ const HomePage = () => {
 
 
         {/* Support */}
-        <section className="mt-[150px] px-6 sm:px-20">
+        <section id="support" className="mt-[150px] px-6 sm:px-20">
             <div className="text-center mb-12">
             <h2 className="text-4xl font-bold">Support</h2>
             <div className="w-12 h-1 bg-[#a38b82] mx-auto mt-2 rounded-full"></div>

@@ -1,24 +1,18 @@
 import React from 'react'
-// import Dashboard from './pages/Dashboard/Dashboard'
-import Tactics from './pages/Tactics/Tactics'
-// import Login from './pages/Register/LogIn'
-// import Sidebar from './components/Sidebar'
-// import HomePage from './pages/HomePage/HomePage'
-// import SignUp from './pages/Register/SignUp'
-// import Profile from './pages/UserProfile/Profile'
-// import Athletes from './pages/Athletes/Athletes'
-
+import { BrowserRouter } from 'react-router-dom'
+import AllRoutes from './routes/Allroutes'
+import { AthleteProvider } from './context/AthleteContext'
+import { CoachProvider } from './context/CoachContext'
 
 const App = () => {
   return (
-    // <HomePage/>
-    // <Sidebar/>
-    // <SignUp/>
-    // <Login/>
-    // <Profile/>
-    // <Athletes/>
-    // <Dashboard/>
-    <Tactics/>
+    <BrowserRouter>
+      <CoachProvider>
+        <AthleteProvider>
+          <AllRoutes />
+        </AthleteProvider>
+      </CoachProvider>
+    </BrowserRouter>
   )
 }
 
