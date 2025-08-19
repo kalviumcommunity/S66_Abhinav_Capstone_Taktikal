@@ -1,5 +1,6 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 import taktikalLogo from '../../assets/TAKTIKAL.svg'
 import athleteIcon from '../../assets/athlete management@3x.png'
@@ -15,17 +16,30 @@ import githubIcon from '../../assets/github@3x.png'
 
 const HomePage = () => {
     const navigate = useNavigate()
+    const { isAuthenticated, logout, user } = useAuth()
 
     const handleSignUp = () => {
         navigate('/signup')
     }
 
     const handleDashboard = () => {
-        navigate('/dashboard')
+        if (isAuthenticated()) {
+            navigate('/dashboard')
+        } else {
+            // Show alert and redirect to login
+            alert('Please log in to access the dashboard')
+            navigate('/login')
+        }
     }
 
     const handleLogin = () => {
         navigate('/login')
+    }
+
+    const handleLogout = () => {
+        logout()
+        // Optionally show a message
+        alert('You have been logged out successfully!')
     }
 
     const scrollToSection = (sectionId) => {
@@ -76,19 +90,35 @@ const HomePage = () => {
             </ul>
 
 
-            <div className="flex gap-3">
-                <button
-                    onClick={handleLogin}
-                    className="border border-white px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-white hover:text-black transition duration-300"
-                >
-                    Login
-                </button>
-                <button
-                    onClick={handleSignUp}
-                    className="bg-white text-black px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition duration-300"
-                >
-                    SignUp
-                </button>
+            <div className="flex gap-3 items-center">
+                {isAuthenticated() ? (
+                    <>
+                        <span className="text-white text-sm">
+                            Welcome, {user?.name || 'Coach'}!
+                        </span>
+                        <button
+                            onClick={handleLogout}
+                            className="border border-white px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-white hover:text-black transition duration-300"
+                        >
+                            Logout
+                        </button>
+                    </>
+                ) : (
+                    <>
+                        <button
+                            onClick={handleLogin}
+                            className="border border-white px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-white hover:text-black transition duration-300"
+                        >
+                            Login
+                        </button>
+                        <button
+                            onClick={handleSignUp}
+                            className="bg-white text-black px-4 py-2 rounded-full text-sm cursor-pointer hover:bg-gray-200 transition duration-300"
+                        >
+                            SignUp
+                        </button>
+                    </>
+                )}
             </div>
         </nav>
 

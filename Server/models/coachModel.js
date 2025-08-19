@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const coachSchema = mongoose.Schema(
     {
-        name:{
+        name: {
             type: String,
             required: true
         },
@@ -16,29 +16,80 @@ const coachSchema = mongoose.Schema(
             minLength: 6,
             required: true
         },
-        profilePicture: {
+        // Profile section fields (optional, filled during profile setup)
+        title: {
             type: String,
             default: ""
         },
-        age: {
-            type: Number,
-            default: 0
-        },
-        sport: {
+        description: {
             type: String,
-            enum: [ 'football', 'handball', 'cricket' ],
-            required: true
+            default: ""
         },
         location: {
             type: String,
             default: ""
         },
+        athletes: {
+            type: String,
+            default: ""
+        },
+        profileImage: {
+            type: String,
+            default: ""
+        },
+        // Stats section fields (optional)
+        teamsCoached: {
+            type: String,
+            default: ""
+        },
+        currentAthletes: {
+            type: String,
+            default: ""
+        },
+        championships: {
+            type: String,
+            default: ""
+        },
+        yearsActive: {
+            type: String,
+            default: ""
+        },
+        // Contacts section fields (optional)
         socialLinks: {
-            Instagram: String, 
-            LinkedIn: String,
-            Twitter: String,
-            Facebook: String
-        }
+            linkedin: {
+                type: String,
+                default: ""
+            },
+            twitter: {
+                type: String,
+                default: ""
+            },
+            videoChannel: {
+                type: String,
+                default: ""
+            }
+        },
+        // User management fields
+        isNewUser: {
+            type: Boolean,
+            default: true
+        },
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+        lastLogin: {
+            type: Date,
+            default: Date.now
+        },
+        loginHistory: [{
+            timestamp: {
+                type: Date,
+                default: Date.now
+            },
+            ipAddress: String,
+            userAgent: String
+        }]
     },
     { timestamps: true }
 );

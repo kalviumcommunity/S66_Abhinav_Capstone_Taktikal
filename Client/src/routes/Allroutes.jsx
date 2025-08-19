@@ -1,6 +1,7 @@
 import React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from '../components/Layout'
+import ProtectedRoute from '../components/ProtectedRoute'
 import HomePage from '../pages/HomePage/HomePage'
 import Dashboard from '../pages/Dashboard/Dashboard'
 import Athletes from '../pages/Athletes/Athletes'
@@ -19,11 +20,31 @@ const AllRoutes = () => {
       <Route path="/login" element={<Login />} />
 
       {/* Protected Routes (Dashboard and related pages) */}
-      <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-      <Route path="/athletes" element={<Layout><Athletes /></Layout>} />
-      <Route path="/tactics" element={<Layout><Tactics /></Layout>} />
-      <Route path="/ai-assistant" element={<Layout><AIAssistant /></Layout>} />
-      <Route path="/profile" element={<Layout><Profile /></Layout>} />
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Layout><Dashboard /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/athletes" element={
+        <ProtectedRoute>
+          <Layout><Athletes /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/tactics" element={
+        <ProtectedRoute>
+          <Layout><Tactics /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/ai-assistant" element={
+        <ProtectedRoute>
+          <Layout><AIAssistant /></Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <Layout><Profile /></Layout>
+        </ProtectedRoute>
+      } />
     </Routes>
   )
 }

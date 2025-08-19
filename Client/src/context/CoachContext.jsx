@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const CoachContext = createContext();
 
@@ -11,10 +12,12 @@ export const useCoach = () => {
 };
 
 export const CoachProvider = ({ children }) => {
+    const { user, token, API_BASE_URL, isAuthenticated } = useAuth();
+
     // Track if this is a new user (first time setup)
     const [isNewUser, setIsNewUser] = useState(true);
-    
-    // Profile data state - start with empty values for new users
+
+    // Profile data state - initialize from authenticated user
     const [profileData, setProfileData] = useState({
         name: "",
         title: "",
@@ -41,6 +44,59 @@ export const CoachProvider = ({ children }) => {
 
     const [profileImage, setProfileImage] = useState(null);
 
+    // Load profile data from authenticated user
+    useEffect(() => {
+        if (user && isAuthenticated()) {
+            setProfileData({
+                name: user.name || "",
+                title: user.title || "",
+                description: user.description || "",
+                email: user.email || "",
+                location: user.location || "",
+                athletes: user.athletes || ""
+            });
+
+            setStatsData({
+                teamsCoached: user.teamsCoached || "",
+                currentAthletes: user.currentAthletes || "",
+                championships: user.championships || "",
+                yearsActive: user.yearsActive || ""
+            });
+
+            setContactsData({
+                linkedin: user.socialLinks?.linkedin || "",
+                twitter: user.socialLinks?.twitter || "",
+                videoChannel: user.socialLinks?.videoChannel || ""
+            });
+
+            setIsNewUser(user.isNewUser || false);
+            setProfileImage(user.profileImage || null);
+        } else {
+            // Clear data when not authenticated
+            setProfileData({
+                name: "",
+                title: "",
+                description: "",
+                email: "",
+                location: "",
+                athletes: ""
+            });
+            setStatsData({
+                teamsCoached: "",
+                currentAthletes: "",
+                championships: "",
+                yearsActive: ""
+            });
+            setContactsData({
+                linkedin: "",
+                twitter: "",
+                videoChannel: ""
+            });
+            setIsNewUser(true);
+            setProfileImage(null);
+        }
+    }, [user]); // Removed isAuthenticated from dependencies to avoid circular calls
+
     // Check if profile is complete (only required fields)
     const isProfileComplete = () => {
         const requiredFields = [
@@ -66,23 +122,127 @@ export const CoachProvider = ({ children }) => {
     };
 
     // Update profile data
-    const updateProfileData = (newData) => {
-        setProfileData(prev => ({ ...prev, ...newData }));
+    const updateProfileData = async (newData) => {
+        if (!isAuthenticated() || !token) {
+            throw new Error('Not authenticated');
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(newData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setProfileData(prev => ({ ...prev, ...newData }));
+                return { success: true };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            return { success: false, message: 'Network error. Please try again.' };
+        }
     };
 
     // Update stats data
-    const updateStatsData = (newData) => {
-        setStatsData(prev => ({ ...prev, ...newData }));
+    const updateStatsData = async (newData) => {
+        if (!isAuthenticated() || !token) {
+            throw new Error('Not authenticated');
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(newData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setStatsData(prev => ({ ...prev, ...newData }));
+                return { success: true };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            console.error('Error updating stats:', error);
+            return { success: false, message: 'Network error. Please try again.' };
+        }
     };
 
     // Update contacts data
-    const updateContactsData = (newData) => {
-        setContactsData(prev => ({ ...prev, ...newData }));
+    const updateContactsData = async (newData) => {
+        if (!isAuthenticated() || !token) {
+            throw new Error('Not authenticated');
+        }
+
+        try {
+            const socialLinks = {
+                linkedin: newData.linkedin || "",
+                twitter: newData.twitter || "",
+                videoChannel: newData.videoChannel || ""
+            };
+
+            const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ socialLinks })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setContactsData(prev => ({ ...prev, ...newData }));
+                return { success: true };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            console.error('Error updating contacts:', error);
+            return { success: false, message: 'Network error. Please try again.' };
+        }
     };
 
     // Complete profile setup
-    const completeProfileSetup = () => {
-        setIsNewUser(false);
+    const completeProfileSetup = async () => {
+        if (!isAuthenticated() || !token) {
+            throw new Error('Not authenticated');
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/auth/complete-setup`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setIsNewUser(false);
+                return { success: true };
+            } else {
+                return { success: false, message: data.message };
+            }
+        } catch (error) {
+            console.error('Error completing profile setup:', error);
+            return { success: false, message: 'Network error. Please try again.' };
+        }
     };
 
     // Reset to new user state (for testing or logout)

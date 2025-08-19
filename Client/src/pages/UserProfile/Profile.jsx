@@ -27,6 +27,7 @@ export default function Profile() {
     // Start in edit mode for new users, or if profile is incomplete
     const [isEditing, setIsEditing] = useState(isNewUser || !isProfileComplete());
     const [editSection, setEditSection] = useState('profile'); // 'profile', 'stats', 'contacts'
+    // Remove unused local state for now - using context directly
 
     // Auto-start editing for new users
     useEffect(() => {

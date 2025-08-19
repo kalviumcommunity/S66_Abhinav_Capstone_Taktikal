@@ -2,20 +2,36 @@ const mongoose = require('mongoose');
 
 const athleteSchema = mongoose.Schema(
     {
-        name: { 
-            type: String 
+        name: {
+            type: String,
+            required: true
         },
         position: {
-            type: String 
+            type: String,
+            required: true,
+            enum: ['Forward', 'Midfielder', 'Defender', 'Goalkeeper']
         },
-        speed: { 
-            type: Number, min: 1, max: 10 
+        speed: {
+            type: Number,
+            min: 1,
+            max: 10,
+            required: true
         },
-        strength: { 
-            type: Number, min: 1, max: 10 
+        strength: {
+            type: Number,
+            min: 1,
+            max: 10,
+            required: true
         },
-        stamina: { 
-            type: Number, min: 1, max: 10 
+        stamina: {
+            type: Number,
+            min: 1,
+            max: 10,
+            required: true
+        },
+        isActive: {
+            type: Boolean,
+            default: true
         },
         coach: {
             type: mongoose.Schema.Types.ObjectId,

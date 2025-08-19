@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import notificationIcon from "../../assets/notification@1x.svg";
 import searchIcon from "../../assets/search@1x.svg";
 import sortIcon from "../../assets/sort.png";
@@ -99,11 +99,23 @@ export default function Athletes() {
         setSelectedPosition(position);
     };
 
-    const handleAddAthlete = () => {
+    const handleAddAthlete = async () => {
         if (newAthlete.name.trim()) {
-            addAthlete(newAthlete);
-            setNewAthlete({ name: '', position: 'Forward', speed: 5, strength: 5, stamina: 5 });
-            setShowAddModal(false);
+            try {
+                const result = await addAthlete(newAthlete);
+                if (result.success) {
+                    setNewAthlete({ name: '', position: 'Forward', speed: 5, strength: 5, stamina: 5 });
+                    setShowAddModal(false);
+                    // Show success message (optional)
+                    console.log('Athlete added successfully!');
+                } else {
+                    // Show error message
+                    alert(result.message || 'Failed to add athlete');
+                }
+            } catch (error) {
+                console.error('Error adding athlete:', error);
+                alert('Failed to add athlete. Please try again.');
+            }
         }
     };
 
@@ -213,9 +225,17 @@ export default function Athletes() {
                                             {avgScore}
                                         </div>
                                         <button
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 if (window.confirm(`Are you sure you want to delete ${athlete.name}?`)) {
-                                                    removeAthlete(athlete.id);
+                                                    try {
+                                                        const result = await removeAthlete(athlete._id || athlete.id);
+                                                        if (!result.success) {
+                                                            alert(result.message || 'Failed to delete athlete');
+                                                        }
+                                                    } catch (error) {
+                                                        console.error('Error deleting athlete:', error);
+                                                        alert('Failed to delete athlete. Please try again.');
+                                                    }
                                                 }
                                             }}
                                             className="bg-red-600 hover:bg-red-700 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs transition-colors"
