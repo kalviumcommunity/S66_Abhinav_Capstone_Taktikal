@@ -9,12 +9,20 @@ const athleteRoutes = require("./routes/athleteRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
 
 // Database connection
-DbConnection();
+let isDbConnected = false;
+DbConnection().then((connected) => {
+    isDbConnected = connected;
+}).catch(() => {
+    isDbConnected = false;
+});
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: true, // Allow all origins for development
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -55,6 +63,7 @@ app.use('*', (req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server started at http://localhost:${PORT}`);
+    console.log(`Network access available at http://0.0.0.0:${PORT}`);
 });

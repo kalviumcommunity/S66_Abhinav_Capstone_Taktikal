@@ -15,8 +15,8 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-    // API base URL
-    const API_BASE_URL = 'http://localhost:3001/api';
+    // API base URL - use environment variable or fallback to localhost
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
     // Check if user is authenticated on app load
     useEffect(() => {
