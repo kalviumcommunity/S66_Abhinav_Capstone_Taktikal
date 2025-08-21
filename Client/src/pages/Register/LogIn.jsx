@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import emailIcon from "../../assets/email2.svg";
@@ -70,7 +70,7 @@ export default function Login() {
                 onClick={handleHome}
             />
         </div>
-        <div className="flex rounded-xl shadow-lg overflow-hidden max-w-4xl w-full mx-6 border border-[#483C32]">
+        <div className="flex rounded-xl shadow-lg overflow-hidden max-w-3xl w-full mx-6 border border-[#483C32]">
 
             {/* Left Side - Login */}
             <div className="bg-[#000000]/30 text-[#B49E92] p-10 flex flex-col gap-5 w-1/2">

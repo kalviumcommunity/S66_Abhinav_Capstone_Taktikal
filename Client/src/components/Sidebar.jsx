@@ -1,5 +1,7 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useCoach } from '../context/CoachContext'
 import logo from '../assets/TAKTIKAL.svg'
 import dashboardIcon from '../assets/dashboard@1x.svg'
 import athletesIcon from '../assets/athletes@1x.svg'
@@ -10,7 +12,24 @@ import profileIcon from '../assets/profile@1x.svg'
 const Sidebar = () => {
     const navigate = useNavigate()
     const location = useLocation()
+    const { user } = useAuth()
+    const { profileData } = useCoach()
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+    // Get user display data
+    const getUserDisplayName = () => {
+        return profileData?.name || user?.name || 'Coach'
+    }
+
+    const getUserTitle = () => {
+        return profileData?.title || user?.title || 'Coach'
+    }
+
+    const getUserInitials = () => {
+        const name = getUserDisplayName()
+        if (name === 'Coach') return 'C'
+        return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+    }
 
     const menuItems = [
         { name: 'Dashboard', icon: dashboardIcon, path: '/dashboard' },
@@ -105,11 +124,15 @@ const Sidebar = () => {
                         {/* Mobile Profile */}
                         <div className="bg-[#000000]/30 border-t border-[#483C32] px-6 py-5 flex items-center gap-4 mt-auto">
                             <div className="bg-[#483C32] text-[#F5F5DC] w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold">
-                                JD
+                                {getUserInitials()}
                             </div>
                             <div className="flex-1">
-                                <div className="text-[#F5F5DC] font-bold text-base leading-tight">John Doe</div>
-                                <div className="text-[#F5F5DC]/70 text-sm font-normal">Head Coach</div>
+                                <div className="text-[#F5F5DC] font-bold text-base leading-tight">
+                                    {getUserDisplayName()}
+                                </div>
+                                <div className="text-[#F5F5DC]/70 text-sm font-normal">
+                                    {getUserTitle()}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -160,11 +183,15 @@ const Sidebar = () => {
                 {/* Bottom Profile */}
                 <div className="bg-[#000000]/30 border-t border-[#483C32] px-6 py-5 flex items-center gap-4 mt-auto">
                     <div className="bg-[#483C32] text-[#F5F5DC] w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold">
-                        JD
+                        {getUserInitials()}
                     </div>
                     <div className="flex-1">
-                        <div className="text-[#F5F5DC] font-bold text-base leading-tight">John Doe</div>
-                        <div className="text-[#F5F5DC]/70 text-sm font-normal">Head Coach</div>
+                        <div className="text-[#F5F5DC] font-bold text-base leading-tight">
+                            {getUserDisplayName()}
+                        </div>
+                        <div className="text-[#F5F5DC]/70 text-sm font-normal">
+                            {getUserTitle()}
+                        </div>
                     </div>
                 </div>
             </div>

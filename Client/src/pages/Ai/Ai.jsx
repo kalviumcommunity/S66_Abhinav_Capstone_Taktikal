@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import notificationIcon from "../../assets/notification@1x.svg";
 import searchIcon from "../../assets/search@1x.svg";
 import bulbIcon from "../../assets/bulb icon@1x.svg";
@@ -108,7 +108,7 @@ export default function AIAssistant() {
                         </div>
 
                         {/* Chat Messages - Fixed height with scroll */}
-                        <div className="flex-1 p-3 md:p-4 overflow-y-auto space-y-3 max-h-64 min-h-64 sm:max-h-80 sm:min-h-80 md:max-h-96 md:min-h-96">
+                        <div className="flex-1 p-4 overflow-y-auto space-y-3 max-h-96 min-h-96">
                             {messages.map((msg, idx) => (
                                 <div
                                     key={idx}
