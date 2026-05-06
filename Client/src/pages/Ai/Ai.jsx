@@ -40,7 +40,7 @@ export default function AIAssistant() {
     };
 
     return (
-        <div className="flex-1 p-6 space-y-6 bg-[#212121] min-h-screen">
+        <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-[#212121] min-h-screen">
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
                     <div>
@@ -107,8 +107,8 @@ export default function AIAssistant() {
                             <span className="text-base md:text-lg font-bold leading-tight">AI Coach Assistant</span>
                         </div>
 
-                        {/* Chat Messages - Fixed height with scroll */}
-                        <div className="flex-1 p-4 overflow-y-auto space-y-3 max-h-96 min-h-96">
+                        {/* Chat Messages - Responsive height */}
+                        <div className="flex-1 p-4 overflow-y-auto space-y-3 h-[350px] sm:h-[400px] md:h-[450px]">
                             {messages.map((msg, idx) => (
                                 <div
                                     key={idx}
@@ -128,18 +128,18 @@ export default function AIAssistant() {
                         </div>
 
                         {/* Suggested Prompts */}
-                        <div className="px-4 py-2 border-t border-[#483C32] bg-gradient-to-br from-[#212121] to-[#483C32] flex flex-wrap gap-2">
+                        <div className="px-4 py-3 border-t border-[#483C32] bg-gradient-to-br from-[#212121] to-[#483C32] flex flex-nowrap overflow-x-auto gap-2 scrollbar-hide sm:flex-wrap">
                             {[
-                                "Recommend recovery exercises for my team",
-                                "Help me plan tomorrow's training session",
-                                "Analyze our recent performance data",
-                                "Suggest tactics for our upcoming match",
-                                "Nutrition tips for athletes"
+                                "Recommend recovery exercises",
+                                "Plan tomorrow's training",
+                                "Analyze recent performance",
+                                "Suggest tactics",
+                                "Nutrition tips"
                             ].map((sug, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setInput(sug)}
-                                    className="bg-[#000000]/30 border border-[#483C32] rounded-full px-3 py-1 text-xs shadow text-[#F5F5DC] hover:bg-[#000000]/50 transition duration-300"
+                                    className="bg-[#000000]/30 border border-[#483C32] rounded-full px-4 py-2 text-xs shadow text-[#F5F5DC] hover:bg-[#000000]/50 transition duration-300 whitespace-nowrap sm:whitespace-normal"
                                 >
                                     {sug}
                                 </button>

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import emailIcon from "../../assets/email2.svg";
 import eyeOpenIcon from "../../assets/eye open.svg";
+import eyeCloseIcon from "../../assets/eye close.svg";
 import passwordLockIcon from "../../assets/password lock.svg";
 import taktikalLogo from "../../assets/TAKTIKAL.svg";
 
@@ -16,6 +17,7 @@ export default function Login() {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSignUp = () => {
         navigate('/signup');
@@ -70,10 +72,10 @@ export default function Login() {
                 onClick={handleHome}
             />
         </div>
-        <div className="flex rounded-xl shadow-lg overflow-hidden max-w-3xl w-full mx-6 border border-[#483C32]">
+        <div className="flex flex-col md:flex-row rounded-xl shadow-2xl overflow-hidden max-w-4xl w-full mx-4 border border-[#483C32] bg-[#000000]/20 backdrop-blur-md">
 
             {/* Left Side - Login */}
-            <div className="bg-[#000000]/30 text-[#B49E92] p-10 flex flex-col gap-5 w-1/2">
+            <div className="bg-[#000000]/30 text-[#B49E92] p-8 md:p-10 flex flex-col gap-5 w-full md:w-1/2">
             <h2 className="font-semibold text-2xl text-center mb-5">Login</h2>
 
             {/* Error Message */}
@@ -108,7 +110,7 @@ export default function Login() {
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5"
                     />
                     <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
@@ -117,14 +119,15 @@ export default function Login() {
                     required
                     />
                     <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2"
                     >
-                    <img
-                        src={eyeOpenIcon}
-                        alt="Show Password"
-                        className="w-5 h-5 cursor-pointer"
-                    />
+                        <img
+                            src={showPassword ? eyeCloseIcon : eyeOpenIcon}
+                            alt="Toggle Password"
+                            className="w-5 h-5 cursor-pointer"
+                        />
                     </button>
                 </div>
 
@@ -155,8 +158,8 @@ export default function Login() {
             </div>
             </div>
 
-            {/* Right Side - SignUp CTA */}
-            <div className="bg-gradient-to-br from-[#483C32] to-[#212121] text-[#F5F5DC] p-10 w-1/2 flex flex-col justify-center">
+            {/* Right Side - Decorative Panel */}
+            <div className="bg-gradient-to-br from-[#483C32] to-[#212121] text-[#F5F5DC] p-8 md:p-10 w-full md:w-1/2 flex flex-col justify-center items-center text-center md:text-left h-auto min-h-[300px] md:min-h-0">
             <h2 className="text-2xl font-bold mb-4">Hello, Coach</h2>
             <p className="text-sm leading-tight mb-8">
                 Start your journey with the best coaching platform for managing your

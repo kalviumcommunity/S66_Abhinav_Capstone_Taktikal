@@ -32,6 +32,20 @@ export const AuthProvider = ({ children }) => {
 
                     if (response.ok) {
                         const data = await response.json();
+                        
+                        // Merge local overrides for fields the older deployed Render backend might drop from payloads
+                        if (data.coach) {
+                            if (!data.coach.sport) {
+                                data.coach.sport = localStorage.getItem('coach_sport') || 'Football';
+                            }
+                            if (!data.coach.events) {
+                                try { data.coach.events = JSON.parse(localStorage.getItem('coach_events')) || []; } catch(e){}
+                            }
+                            if (!data.coach.activities) {
+                                try { data.coach.activities = JSON.parse(localStorage.getItem('coach_activities')) || []; } catch(e){}
+                            }
+                        }
+                        
                         setUser(data.coach);
                         setToken(storedToken);
                     } else {
@@ -67,6 +81,15 @@ export const AuthProvider = ({ children }) => {
             const data = await response.json();
 
             if (response.ok) {
+                if (data.coach) {
+                    if (!data.coach.sport) data.coach.sport = localStorage.getItem('coach_sport') || 'Football';
+                    if (!data.coach.events) {
+                        try { data.coach.events = JSON.parse(localStorage.getItem('coach_events')) || []; } catch(e){}
+                    }
+                    if (!data.coach.activities) {
+                        try { data.coach.activities = JSON.parse(localStorage.getItem('coach_activities')) || []; } catch(e){}
+                    }
+                }
                 setUser(data.coach);
                 setToken(data.token);
                 localStorage.setItem('token', data.token);
@@ -81,14 +104,14 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Register function
-    const register = async (name, email, password) => {
+    const register = async (name, email, password, sport) => {
         try {
             const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, email, password })
+                body: JSON.stringify({ name, email, password, sport })
             });
 
             const data = await response.json();
@@ -112,6 +135,9 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setToken(null);
         localStorage.removeItem('token');
+        localStorage.removeItem('coach_sport');
+        localStorage.removeItem('coach_events');
+        localStorage.removeItem('coach_activities');
     };
 
     // Check if user is authenticated

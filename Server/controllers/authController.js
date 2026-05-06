@@ -12,7 +12,7 @@ const generateToken = (id) => {
 // Register new coach
 const registerCoach = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, sport } = req.body;
 
         // Validation
         if (!name || !email || !password) {
@@ -34,6 +34,7 @@ const registerCoach = async (req, res) => {
             name,
             email,
             password: hashedPassword,
+            sport: sport || 'Football',
             isNewUser: true
         });
 
@@ -56,7 +57,12 @@ const registerCoach = async (req, res) => {
                 id: coach._id,
                 name: coach.name,
                 email: coach.email,
-                isNewUser: coach.isNewUser
+                sport: coach.sport,
+                isNewUser: coach.isNewUser,
+                events: coach.events || [],
+                activities: coach.activities || [],
+                tactics_saved_formations: coach.tactics_saved_formations || [],
+                tactics_checklist: coach.tactics_checklist || []
             },
             token
         });
@@ -120,9 +126,14 @@ const loginCoach = async (req, res) => {
                 id: coach._id,
                 name: coach.name,
                 email: coach.email,
+                sport: coach.sport,
                 isNewUser: coach.isNewUser,
                 profileImage: coach.profileImage,
-                lastLogin: coach.lastLogin
+                lastLogin: coach.lastLogin,
+                events: coach.events || [],
+                activities: coach.activities || [],
+                tactics_saved_formations: coach.tactics_saved_formations || [],
+                tactics_checklist: coach.tactics_checklist || []
             },
             token
         });
@@ -146,6 +157,7 @@ const getProfile = async (req, res) => {
                 id: coach._id,
                 name: coach.name,
                 email: coach.email,
+                sport: coach.sport,
                 title: coach.title,
                 description: coach.description,
                 location: coach.location,
@@ -158,7 +170,11 @@ const getProfile = async (req, res) => {
                 socialLinks: coach.socialLinks,
                 isNewUser: coach.isNewUser,
                 lastLogin: coach.lastLogin,
-                loginHistory: coach.loginHistory
+                loginHistory: coach.loginHistory,
+                events: coach.events || [],
+                activities: coach.activities || [],
+                tactics_saved_formations: coach.tactics_saved_formations || [],
+                tactics_checklist: coach.tactics_checklist || []
             }
         });
     } catch (error) {
@@ -193,6 +209,7 @@ const updateProfile = async (req, res) => {
                 id: coach._id,
                 name: coach.name,
                 email: coach.email,
+                sport: coach.sport,
                 title: coach.title,
                 description: coach.description,
                 location: coach.location,
@@ -203,7 +220,11 @@ const updateProfile = async (req, res) => {
                 championships: coach.championships,
                 yearsActive: coach.yearsActive,
                 socialLinks: coach.socialLinks,
-                isNewUser: coach.isNewUser
+                isNewUser: coach.isNewUser,
+                events: coach.events || [],
+                activities: coach.activities || [],
+                tactics_saved_formations: coach.tactics_saved_formations || [],
+                tactics_checklist: coach.tactics_checklist || []
             }
         });
     } catch (error) {

@@ -17,17 +17,17 @@ export default function Athletes() {
     const [sortOrder, setSortOrder] = useState('asc');
 
     // Use athletes from context
-    const { athletes, addAthlete, removeAthlete } = useAthletes();
+    const { athletes, addAthlete, removeAthlete, sportPositions } = useAthletes();
 
     const [newAthlete, setNewAthlete] = useState({
         name: '',
-        position: 'Forward',
+        position: sportPositions[0] || 'Forward',
         speed: 5,
         strength: 5,
         stamina: 5
     });
 
-    const positions = ["All Positions", "Forward", "Midfielder", "Defender", "Goalkeeper"];
+    const filterPositions = ["All Positions", ...sportPositions];
 
     // Calculate average score for an athlete
     const calculateAverageScore = (athlete) => {
@@ -157,12 +157,12 @@ export default function Athletes() {
                 {/* Filter Row */}
                 <div className="flex flex-col gap-4 bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] p-4 md:p-5 rounded-lg shadow-lg">
                     {/* Position Buttons */}
-                    <div className="flex flex-wrap items-center gap-2 w-full">
-                        {positions.map((pos, idx) => (
+                    <div className="flex flex-nowrap items-center gap-2 w-full overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-[#483C32] scrollbar-track-transparent">
+                        {filterPositions.map((pos, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => handlePositionFilter(pos)}
-                                className="px-3 md:px-4 py-2 rounded-full text-sm md:text-base text-[#F5F5DC] hover:opacity-80 transition-all duration-300 flex-shrink-0 font-normal"
+                                className="px-3 md:px-4 py-2 rounded-full text-sm md:text-base text-[#F5F5DC] hover:opacity-80 transition-all duration-300 flex-shrink-0 font-normal whitespace-nowrap"
                                 style={{
                                     backgroundColor: selectedPosition === pos ? "#483C32" : "#00000050"
                                 }}
@@ -298,8 +298,8 @@ export default function Athletes() {
 
                 {/* Add Athlete Modal */}
                 {showAddModal && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-[#212121] rounded-lg p-6 w-full max-w-md border border-[#483C32]">
+                    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[100] p-4 backdrop-blur-sm shadow-2xl overflow-y-auto">
+                        <div className="bg-[#212121] rounded-2xl p-6 w-full max-w-md border border-[#483C32] my-auto">
                             <h2 className="text-xl font-bold text-[#F5F5DC] mb-4">Add New Athlete</h2>
 
                             <div className="space-y-4">
@@ -321,10 +321,9 @@ export default function Athletes() {
                                         onChange={(e) => setNewAthlete({...newAthlete, position: e.target.value})}
                                         className="w-full px-3 py-2 bg-[#483C32] text-[#F5F5DC] rounded-lg border border-[#5a4a3e] focus:outline-none focus:border-[#F5F5DC]"
                                     >
-                                        <option value="Forward">Forward</option>
-                                        <option value="Midfielder">Midfielder</option>
-                                        <option value="Defender">Defender</option>
-                                        <option value="Goalkeeper">Goalkeeper</option>
+                                        {sportPositions.map(pos => (
+                                            <option key={pos} value={pos}>{pos}</option>
+                                        ))}
                                     </select>
                                 </div>
 

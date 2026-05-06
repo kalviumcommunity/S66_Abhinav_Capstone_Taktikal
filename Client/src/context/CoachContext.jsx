@@ -24,7 +24,8 @@ export const CoachProvider = ({ children }) => {
         description: "",
         email: "",
         location: "",
-        athletes: ""
+        athletes: "",
+        sport: ""
     });
 
     // Stats data state - start with empty values
@@ -44,6 +45,14 @@ export const CoachProvider = ({ children }) => {
 
     const [profileImage, setProfileImage] = useState(null);
 
+    const [events, setEvents] = useState(() => {
+        return user?.events || [];
+    });
+
+    const [activities, setActivities] = useState(() => {
+        return user?.activities || [];
+    });
+
     // Load profile data from authenticated user
     useEffect(() => {
         if (user && isAuthenticated()) {
@@ -53,7 +62,8 @@ export const CoachProvider = ({ children }) => {
                 description: user.description || "",
                 email: user.email || "",
                 location: user.location || "",
-                athletes: user.athletes || ""
+                athletes: user.athletes || "",
+                sport: user.sport || "Football"
             });
 
             setStatsData({
@@ -71,6 +81,14 @@ export const CoachProvider = ({ children }) => {
 
             setIsNewUser(user.isNewUser || false);
             setProfileImage(user.profileImage || null);
+            setEvents(user.events || []);
+            setActivities(user.activities || []);
+            
+            // Re-sync local storage so Tactics and older pages don't freak out
+            localStorage.setItem('coach_events', JSON.stringify(user.events || []));
+            localStorage.setItem('coach_activities', JSON.stringify(user.activities || []));
+            if (user.tactics_saved_formations) localStorage.setItem('tactics_saved_formations', JSON.stringify(user.tactics_saved_formations));
+            if (user.tactics_checklist) localStorage.setItem('tactics_checklist', JSON.stringify(user.tactics_checklist));
         } else {
             // Clear data when not authenticated
             setProfileData({
@@ -79,7 +97,8 @@ export const CoachProvider = ({ children }) => {
                 description: "",
                 email: "",
                 location: "",
-                athletes: ""
+                athletes: "",
+                sport: ""
             });
             setStatsData({
                 teamsCoached: "",
@@ -94,6 +113,13 @@ export const CoachProvider = ({ children }) => {
             });
             setIsNewUser(true);
             setProfileImage(null);
+            setEvents([]);
+            setActivities([]);
+            
+            localStorage.removeItem('coach_events');
+            localStorage.removeItem('coach_activities');
+            localStorage.removeItem('tactics_saved_formations');
+            localStorage.removeItem('tactics_checklist');
         }
     }, [user]); // Removed isAuthenticated from dependencies to avoid circular calls
 
@@ -121,78 +147,56 @@ export const CoachProvider = ({ children }) => {
         return isProfileComplete();
     };
 
-    // Update profile data
-    const updateProfileData = async (newData) => {
-        if (!isAuthenticated() || !token) {
-            throw new Error('Not authenticated');
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setProfileData(prev => ({ ...prev, ...newData }));
-                return { success: true };
-            } else {
-                return { success: false, message: data.message };
-            }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            return { success: false, message: 'Network error. Please try again.' };
-        }
+    // Update profile data locally
+    const updateProfileData = (newData) => {
+        setProfileData(prev => ({ ...prev, ...newData }));
+        return { success: true };
     };
 
-    // Update stats data
-    const updateStatsData = async (newData) => {
-        if (!isAuthenticated() || !token) {
-            throw new Error('Not authenticated');
-        }
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/auth/profile`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(newData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                setStatsData(prev => ({ ...prev, ...newData }));
-                return { success: true };
-            } else {
-                return { success: false, message: data.message };
-            }
-        } catch (error) {
-            console.error('Error updating stats:', error);
-            return { success: false, message: 'Network error. Please try again.' };
-        }
+    // Update stats data locally
+    const updateStatsData = (newData) => {
+        setStatsData(prev => ({ ...prev, ...newData }));
+        return { success: true };
     };
 
-    // Update contacts data
-    const updateContactsData = async (newData) => {
+    // Update contacts data locally
+    const updateContactsData = (newData) => {
+        setContactsData(prev => ({ ...prev, ...newData }));
+        return { success: true };
+    };
+
+    // Save all profile data to backend
+    const saveProfileToBackend = async () => {
         if (!isAuthenticated() || !token) {
-            throw new Error('Not authenticated');
+            return { success: false, message: 'Not authenticated' };
         }
 
         try {
-            const socialLinks = {
-                linkedin: newData.linkedin || "",
-                twitter: newData.twitter || "",
-                videoChannel: newData.videoChannel || ""
+            const dataToSave = {
+                ...profileData,
+                ...statsData,
+                profileImage: profileImage,
+                events: events,
+                activities: activities,
+                socialLinks: {
+                    linkedin: contactsData.linkedin || "",
+                    twitter: contactsData.twitter || "",
+                    videoChannel: contactsData.videoChannel || ""
+                }
             };
+            
+            // Backup to local storage in case backend doesn't support it yet
+            localStorage.setItem('coach_sport', profileData.sport || "Football");
+            localStorage.setItem('coach_events', JSON.stringify(events));
+            localStorage.setItem('coach_activities', JSON.stringify(activities));
+            
+            // Extract local storage for tactics to send to backend too
+            const tactics_saved_formations = JSON.parse(localStorage.getItem('tactics_saved_formations') || '[]');
+            const tactics_checklist = JSON.parse(localStorage.getItem('tactics_checklist') || '[]');
+            
+            // Append tactics onto dataToSave
+            dataToSave.tactics_saved_formations = tactics_saved_formations;
+            dataToSave.tactics_checklist = tactics_checklist;
 
             const response = await fetch(`${API_BASE_URL}/auth/profile`, {
                 method: 'PUT',
@@ -200,19 +204,18 @@ export const CoachProvider = ({ children }) => {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ socialLinks })
+                body: JSON.stringify(dataToSave)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                setContactsData(prev => ({ ...prev, ...newData }));
                 return { success: true };
             } else {
                 return { success: false, message: data.message };
             }
         } catch (error) {
-            console.error('Error updating contacts:', error);
+            console.error('Error saving profile:', error);
             return { success: false, message: 'Network error. Please try again.' };
         }
     };
@@ -268,6 +271,8 @@ export const CoachProvider = ({ children }) => {
             videoChannel: ""
         });
         setProfileImage(null);
+        setEvents([]);
+        setActivities([]);
     };
 
     const value = {
@@ -276,13 +281,18 @@ export const CoachProvider = ({ children }) => {
         statsData,
         contactsData,
         profileImage,
+        events,
+        activities,
         setProfileImage,
+        setEvents,
+        setActivities,
         updateProfileData,
         updateStatsData,
         updateContactsData,
         isProfileComplete,
         isBasicProfileComplete,
         completeProfileSetup,
+        saveProfileToBackend,
         resetToNewUser,
         setIsNewUser
     };

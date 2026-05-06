@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'sans': ['Roboto', 'sans-serif'],
-        'roboto': ['Roboto', 'sans-serif'],
+        'sans': ['Poppins', 'sans-serif'],
+        'poppins': ['Poppins', 'sans-serif'],
       },
       fontSize: {
         'xs': ['0.75rem', { lineHeight: '1.4' }],

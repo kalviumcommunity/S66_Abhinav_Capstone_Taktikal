@@ -6,28 +6,69 @@ import videoIcon from "../../assets/video@1x.svg";
 import locationIcon from "../../assets/location@1x.svg";
 import emailIcon from "../../assets/email2.svg";
 import { useCoach } from "../../context/CoachContext";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Profile() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const {
         isNewUser,
         profileData,
         statsData,
         contactsData,
         profileImage,
+        events,
+        activities,
         setProfileImage,
+        setEvents,
+        setActivities,
         updateProfileData,
         updateStatsData,
         updateContactsData,
         isProfileComplete,
         completeProfileSetup,
+        saveProfileToBackend,
         resetToNewUser
     } = useCoach();
 
     // Start in edit mode for new users, or if profile is incomplete
     const [isEditing, setIsEditing] = useState(isNewUser || !isProfileComplete());
     const [editSection, setEditSection] = useState('profile'); // 'profile', 'stats', 'contacts'
-    // Remove unused local state for now - using context directly
+    
+    // States for adding events and activities
+    const [showAddEvent, setShowAddEvent] = useState(false);
+    const [newEvent, setNewEvent] = useState({ title: '', date: '', status: '' });
+    
+    const [showAddActivity, setShowAddActivity] = useState(false);
+    const [newActivity, setNewActivity] = useState({ title: '', date: '' });
+
+    // Date filtering and sorting logic
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // start of day
+
+    const upcomingEvents = events
+        .filter(event => new Date(event.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 3);
+
+    const upcomingActivities = activities
+        .filter(activity => new Date(activity.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 3);
+
+    const handleAddEvent = () => {
+        if (!newEvent.title || !newEvent.date) return;
+        setEvents([...events, newEvent]);
+        setShowAddEvent(false);
+        setNewEvent({ title: '', date: '', status: '' });
+    };
+
+    const handleAddActivity = () => {
+        if (!newActivity.title || !newActivity.date) return;
+        setActivities([...activities, newActivity]);
+        setShowAddActivity(false);
+        setNewActivity({ title: '', date: '' });
+    };
 
     // Auto-start editing for new users
     useEffect(() => {
@@ -71,7 +112,7 @@ export default function Profile() {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // Check if this is a new user completing their profile
         if (isNewUser) {
             // Validate all required fields
@@ -101,14 +142,23 @@ export default function Profile() {
                 return;
             }
 
+            // Also, update sport if changed during complete setting
+            if (profileData.sport && profileData.sport !== user?.sport) {
+                await updateProfileData({ sport: profileData.sport });
+            }
+
             // All validations passed
+            await saveProfileToBackend();
             completeProfileSetup();
             alert('Profile completed successfully! Welcome to Taktikal!');
             navigate('/dashboard');
         } else {
-            // Here you would typically save to backend
+            // Save to backend
+            await saveProfileToBackend();
             setIsEditing(false);
             setEditSection('profile');
+            // Force reload to sync new sport payload throughout App Context
+            window.location.reload();
         }
     };
 
@@ -119,7 +169,8 @@ export default function Profile() {
         }
         setIsEditing(false);
         setEditSection('profile');
-        // Reset any unsaved changes if needed
+        // Reset any unsaved changes by reloading the profile from auth state
+        window.location.reload();
     };
     return (
         <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-[#212121] min-h-screen">
@@ -169,19 +220,19 @@ export default function Profile() {
                 <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-xl p-4 md:p-6 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
                         {/* Profile Image */}
-                        <div className="relative">
-                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border border-[#483C32] bg-gradient-to-br from-[#212121] to-[#483C32] overflow-hidden">
+                        <div className="relative mx-auto sm:mx-0">
+                            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-[#483C32] bg-gradient-to-br from-[#212121] to-[#483C32] overflow-hidden shadow-xl">
                                 {profileImage ? (
                                     <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-full h-full flex items-center justify-center text-[#F5F5DC] font-bold text-lg">
+                                    <div className="w-full h-full flex items-center justify-center text-[#F5F5DC] font-bold text-2xl">
                                         {profileData.name.split(' ').map(n => n[0]).join('')}
                                     </div>
                                 )}
                             </div>
                             {isEditing && editSection === 'profile' && (
-                                <label className="absolute -bottom-2 -right-2 bg-[#483C32] text-[#F5F5DC] rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-[#5a4333] transition duration-300">
-                                    <span className="text-xs">+</span>
+                                <label className="absolute -bottom-1 -right-1 bg-[#483C32] text-[#F5F5DC] rounded-full w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-[#5a4333] transition duration-300 shadow-md border border-[#F5F5DC]/20">
+                                    <span className="text-lg font-bold">+</span>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -200,10 +251,10 @@ export default function Profile() {
                                         value={profileData.name}
                                         onChange={(e) => updateProfileData({name: e.target.value})}
                                         placeholder="Enter your full name"
-                                        className={`text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight bg-[#000000]/30 border ${getFieldBorderColor('name')} rounded px-2 py-1`}
+                                        className={`text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight bg-[#000000]/30 border ${getFieldBorderColor('name')} rounded px-2 py-1 w-full text-center sm:text-left`}
                                     />
                                 ) : (
-                                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight">
+                                    <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight text-center sm:text-left">
                                         {profileData.name || "Your Name"}
                                     </h2>
                                 )}
@@ -222,6 +273,26 @@ export default function Profile() {
                                     </span>
                                 )}
                             </div>
+                            
+                            <div className="flex items-center gap-2 mb-3">
+                                {isEditing && editSection === 'profile' ? (
+                                    <select
+                                        value={profileData.sport || user?.sport || "Football"}
+                                        onChange={(e) => updateProfileData({sport: e.target.value})}
+                                        className={`text-sm px-3 py-1 rounded bg-[#483C32] text-[#F5F5DC] w-fit font-normal border ${getFieldBorderColor('sport')} outline-none`}
+                                    >
+                                        <option value="Football">Football</option>
+                                        <option value="Cricket">Cricket</option>
+                                        <option value="Volleyball">Volleyball</option>
+                                        <option value="Handball">Handball</option>
+                                        <option value="Rugby">Rugby</option>
+                                    </select>
+                                ) : (
+                                    <span className="text-sm px-3 py-1 rounded bg-[#212121] border border-[#483C32] text-[#F5F5DC] w-fit font-normal">
+                                        Sport: {profileData.sport || user?.sport || "Football"}
+                                    </span>
+                                )}
+                            </div>
 
                             {isEditing && editSection === 'profile' ? (
                                 <input
@@ -237,43 +308,46 @@ export default function Profile() {
                                 </p>
                             )}
 
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 text-sm md:text-base text-[#F5F5DC] font-normal">
-                                    <img src={emailIcon} alt="Email" className="w-4 h-4 md:w-5 md:h-5" />
+                            <div className="space-y-3 flex flex-col items-center sm:items-start">
+                                <div className="flex items-center gap-3 text-sm md:text-base text-[#F5F5DC] font-normal w-full justify-center sm:justify-start">
+                                    <img src={emailIcon} alt="Email" className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                                     {isEditing && editSection === 'profile' ? (
                                         <input
                                             type="email"
                                             value={profileData.email}
                                             onChange={(e) => updateProfileData({email: e.target.value})}
                                             placeholder="your.email@example.com"
-                                            className={`bg-[#000000]/30 border ${getFieldBorderColor('email')} rounded px-2 py-1 text-[#F5F5DC]`}
+                                            className={`bg-[#000000]/30 border ${getFieldBorderColor('email')} rounded-lg px-3 py-2 text-[#F5F5DC] flex-1 text-sm`}
                                         />
                                     ) : (
-                                        <span>{profileData.email}</span>
+                                        <span className="truncate">{profileData.email}</span>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-3 text-sm md:text-base text-[#F5F5DC] font-normal">
-                                    <img src={locationIcon} alt="Location" className="w-4 h-4 md:w-5 md:h-5" />
+                                <div className="flex items-center gap-3 text-sm md:text-base text-[#F5F5DC] font-normal w-full justify-center sm:justify-start">
+                                    <img src={locationIcon} alt="Location" className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
                                     {isEditing && editSection === 'profile' ? (
                                         <input
                                             type="text"
                                             value={profileData.location}
                                             onChange={(e) => updateProfileData({location: e.target.value})}
                                             placeholder="City, Country"
-                                            className={`bg-[#000000]/30 border ${getFieldBorderColor('location')} rounded px-2 py-1 text-[#F5F5DC]`}
+                                            className={`bg-[#000000]/30 border ${getFieldBorderColor('location')} rounded-lg px-3 py-2 text-[#F5F5DC] flex-1 text-sm`}
                                         />
                                     ) : (
                                         <span>{profileData.location}</span>
                                     )}
                                 </div>
                                 {isEditing && editSection === 'profile' ? (
-                                    <input
-                                        type="text"
-                                        value={profileData.athletes}
-                                        onChange={(e) => updateProfileData({athletes: e.target.value})}
-                                        className="font-bold text-base md:text-lg text-[#F5F5DC] leading-tight bg-[#000000]/30 border border-[#483C32] rounded px-2 py-1"
-                                        placeholder="Number of Athletes"
-                                    />
+                                    <div className="flex items-center gap-2 w-full justify-center sm:justify-start">
+                                        <input
+                                            type="text"
+                                            value={profileData.athletes}
+                                            onChange={(e) => updateProfileData({athletes: e.target.value})}
+                                            className="font-bold text-base md:text-lg text-[#F5F5DC] leading-tight bg-[#000000]/30 border border-[#483C32] rounded-lg px-3 py-2 w-full max-w-[150px] text-center sm:text-left"
+                                            placeholder="Athletes #"
+                                        />
+                                        <span className="text-[#F5F5DC] text-sm">Athletes</span>
+                                    </div>
                                 ) : (
                                     <p className="font-bold text-base md:text-lg text-[#F5F5DC] leading-tight">{profileData.athletes} Athletes</p>
                                 )}
@@ -382,26 +456,32 @@ export default function Profile() {
 
                 {/* Activity Section */}
                 <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-xl p-4 md:p-6 shadow-lg">
-                    <h3 className="text-lg font-semibold mb-4" style={{ color: "#F5F5DC" }}>Activity</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold" style={{ color: "#F5F5DC" }}>Activity</h3>
+                        <button onClick={() => setShowAddActivity(!showAddActivity)} className="text-xs bg-[#483C32] text-[#F5F5DC] px-2 py-1 rounded">
+                            {showAddActivity ? 'Cancel' : '+ Add Activity'}
+                        </button>
+                    </div>
+                    {showAddActivity && (
+                        <div className="mb-4 bg-[#000000]/30 p-3 rounded-lg flex flex-col sm:flex-row gap-2">
+                            <input type="text" placeholder="Activity Title" className="bg-[#212121] text-xs text-[#F5F5DC] p-2 rounded flex-1" value={newActivity.title} onChange={e => setNewActivity({...newActivity, title: e.target.value})} />
+                            <input type="date" className="bg-[#212121] text-xs text-[#F5F5DC] p-2 rounded" value={newActivity.date} onChange={e => setNewActivity({...newActivity, date: e.target.value})} />
+                            <button onClick={handleAddActivity} className="bg-green-600 text-[#F5F5DC] text-xs px-3 py-2 rounded">Save</button>
+                        </div>
+                    )}
                     <div className="space-y-3">
-                        <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                            <div>
-                                <p className="text-sm font-semibold" style={{ color: "#F5F5DC" }}>Training Session: Advanced Tactics</p>
-                                <p className="text-xs" style={{ color: "#F5F5DC" }}>Published Jul 10, 2023</p>
+                        {upcomingActivities.length > 0 ? upcomingActivities.map((act, i) => (
+                            <div key={i} className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
+                                <div>
+                                    <p className="text-sm font-semibold" style={{ color: "#F5F5DC" }}>{act.title}</p>
+                                    <p className="text-xs" style={{ color: "#F5F5DC" }}>
+                                        Scheduled for {new Date(act.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                    </p>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                            <div>
-                                <p className="text-sm font-semibold" style={{ color: "#F5F5DC" }}>Performance Analysis Workshop</p>
-                                <p className="text-xs" style={{ color: "#F5F5DC" }}>Published Jul 12, 2023</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                            <div>
-                                <p className="text-sm font-semibold" style={{ color: "#F5F5DC" }}>Team Building Exercise</p>
-                                <p className="text-xs" style={{ color: "#F5F5DC" }}>Published Jul 05, 2023</p>
-                            </div>
-                        </div>
+                        )) : (
+                            <p className="text-sm text-[#F5F5DC]/70">No upcoming activities.</p>
+                        )}
                     </div>
                     <button className="mt-4 w-full bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] text-[#F5F5DC] text-sm py-2 rounded hover:bg-[#483C32] transition duration-300">View All Activity</button>
                 </div>
@@ -410,20 +490,33 @@ export default function Profile() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
                     {/* Events */}
                     <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-xl p-4 md:p-6 shadow-lg">
-                        <h3 className="text-base md:text-lg font-semibold mb-4 text-[#F5F5DC]">Events</h3>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-base md:text-lg font-semibold text-[#F5F5DC]">Events</h3>
+                            <button onClick={() => setShowAddEvent(!showAddEvent)} className="text-xs bg-[#483C32] text-[#F5F5DC] px-2 py-1 rounded">
+                                {showAddEvent ? 'Cancel' : '+ Add Event'}
+                            </button>
+                        </div>
+                        {showAddEvent && (
+                            <div className="mb-4 bg-[#000000]/30 p-3 rounded-lg flex flex-col gap-2">
+                                <input type="text" placeholder="Event Title" className="bg-[#212121] text-xs text-[#F5F5DC] p-2 rounded" value={newEvent.title} onChange={e => setNewEvent({...newEvent, title: e.target.value})} />
+                                <input type="date" className="bg-[#212121] text-xs text-[#F5F5DC] p-2 rounded" value={newEvent.date} onChange={e => setNewEvent({...newEvent, date: e.target.value})} />
+                                <input type="text" placeholder="Status (e.g. Live)" className="bg-[#212121] text-xs text-[#F5F5DC] p-2 rounded" value={newEvent.status} onChange={e => setNewEvent({...newEvent, status: e.target.value})} />
+                                <button onClick={handleAddEvent} className="bg-green-600 text-[#F5F5DC] text-xs py-2 rounded mt-1 hover:bg-green-700 transition">Save Event</button>
+                            </div>
+                        )}
                         <div className="space-y-3">
-                            <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                                <span className="text-sm text-[#F5F5DC]">Squad Briefing <span className="text-green-400 ml-2 text-xs">Live</span></span>
-                                <span className="text-xs text-[#F5F5DC]">July 11</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                                <span className="text-sm text-[#F5F5DC]">Regional Tournament</span>
-                                <span className="text-xs text-[#F5F5DC]">July 23</span>
-                            </div>
-                            <div className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
-                                <span className="text-sm text-[#F5F5DC]">Performance Review <span className="text-[#941502] ml-2 text-xs">Joined</span></span>
-                                <span className="text-xs text-[#F5F5DC]">Aug 2</span>
-                            </div>
+                            {upcomingEvents.length > 0 ? upcomingEvents.map((evt, i) => (
+                                <div key={i} className="flex justify-between items-center bg-[#000000]/30 p-3 rounded-lg">
+                                    <span className="text-sm text-[#F5F5DC]">
+                                        {evt.title} {evt.status && <span className="text-green-400 ml-2 text-xs">{evt.status}</span>}
+                                    </span>
+                                    <span className="text-xs text-[#F5F5DC]">
+                                        {new Date(evt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                    </span>
+                                </div>
+                            )) : (
+                                <p className="text-sm text-[#F5F5DC]/70">No upcoming events.</p>
+                            )}
                         </div>
                         <button className="mt-4 w-full bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] text-[#F5F5DC] text-sm py-2 rounded hover:bg-[#483C32] transition duration-300">View Calendar</button>
                     </div>

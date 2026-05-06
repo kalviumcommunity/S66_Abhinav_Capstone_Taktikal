@@ -18,7 +18,7 @@ import {
 export default function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showEditModal, setShowEditModal] = useState(false);
-    const { performanceData, updatePerformanceData, getAthleteStats } = useAthletes();
+    const { performanceData, updatePerformanceData, getAthleteStats, sportPositions, sport } = useAthletes();
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -67,7 +67,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {/* Total Athletes Card */}
                     <div className="flex items-center justify-between bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] shadow-lg rounded-lg p-4 md:p-5 lg:p-6 hover:shadow-xl transition-all duration-300">
                         <div className="flex-1">
@@ -91,7 +91,7 @@ export default function Dashboard() {
                                 Active Players
                             </p>
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight mb-1">
-                                {athleteStats.total - athleteStats.byPosition.Goalkeeper}
+                                {athleteStats.total - (athleteStats.byPosition[sportPositions[sportPositions.length - 1]] || 0)}
                             </h3>
                             <p className="text-blue-400 text-xs md:text-sm font-normal">Field players</p>
                         </div>
@@ -105,7 +105,7 @@ export default function Dashboard() {
                                 Positions Filled
                             </p>
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight mb-1">
-                                {Object.values(athleteStats.byPosition).filter(count => count > 0).length}/4
+                                {Object.values(athleteStats.byPosition).filter(count => count > 0).length}/{sportPositions.length}
                             </h3>
                             <p className="text-yellow-400 text-xs md:text-sm font-normal">Position coverage</p>
                         </div>
@@ -134,19 +134,24 @@ export default function Dashboard() {
                             Edit
                         </button>
                     </div>
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={performanceData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#555" />
-                            <XAxis dataKey="week" stroke="#F5F5DC" />
-                            <YAxis stroke="#F5F5DC" />
-                            <Tooltip />
-                            <Legend />
-                            <Line type="monotone" dataKey="speed" stroke="#a38b82" strokeWidth={2} />
-                            <Line type="monotone" dataKey="strength" stroke="#d4b59e" strokeWidth={2} />
-                            <Line type="monotone" dataKey="endurance" stroke="#967969" strokeWidth={2} />
-                            <Line type="monotone" dataKey="technique" stroke="#deb887" strokeWidth={2} />
-                        </LineChart>
-                    </ResponsiveContainer>
+                    <div className="h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={performanceData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#555" vertical={false} />
+                                <XAxis dataKey="week" stroke="#F5F5DC" fontSize={12} tickMargin={10} />
+                                <YAxis stroke="#F5F5DC" fontSize={12} tickMargin={10} />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: '#212121', border: '1px solid #483C32', borderRadius: '8px', color: '#F5F5DC' }}
+                                    itemStyle={{ color: '#F5F5DC' }}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                <Line type="monotone" dataKey="speed" stroke="#a38b82" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                <Line type="monotone" dataKey="strength" stroke="#d4b59e" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                <Line type="monotone" dataKey="endurance" stroke="#967969" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                <Line type="monotone" dataKey="technique" stroke="#deb887" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
                 </div>
 
                 {/* Performance Edit Modal */}

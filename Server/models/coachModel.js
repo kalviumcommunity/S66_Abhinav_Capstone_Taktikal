@@ -16,6 +16,11 @@ const coachSchema = mongoose.Schema(
             minLength: 6,
             required: true
         },
+        sport: {
+            type: String,
+            enum: ['Football', 'Cricket', 'Volleyball', 'Handball', 'Rugby'],
+            default: 'Football'
+        },
         // Profile section fields (optional, filled during profile setup)
         title: {
             type: String,
@@ -55,6 +60,23 @@ const coachSchema = mongoose.Schema(
             default: ""
         },
         // Contacts section fields (optional)
+        events: [{
+            title: String,
+            date: String,
+            status: String
+        }],
+        activities: [{
+            title: String,
+            date: String
+        }],
+        tactics_saved_formations: [{
+            name: String,
+            players: Array
+        }],
+        tactics_checklist: [{
+            text: String,
+            checked: Boolean
+        }],
         socialLinks: {
             linkedin: {
                 type: String,

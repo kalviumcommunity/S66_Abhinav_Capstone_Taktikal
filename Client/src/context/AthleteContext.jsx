@@ -3,6 +3,18 @@ import { useAuth } from './AuthContext';
 
 const AthleteContext = createContext();
 
+export const getSportPositions = (sport) => {
+    switch(sport) {
+        case 'Cricket': return ["Batsman", "Bowler", "All-Rounder", "Wicketkeeper"];
+        case 'Volleyball': return ["Setter", "Libero", "Middle Blocker", "Outside Hitter"];
+        case 'Handball': return ["Winger", "Back", "Center", "Goalkeeper"];
+        case 'Rugby': return ["Prop", "Hooker", "Lock", "Scrum-half", "Fly-half"];
+        case 'Football':
+        default:
+            return ["Forward", "Midfielder", "Defender", "Goalkeeper"];
+    }
+};
+
 export const useAthletes = () => {
     const context = useContext(AthleteContext);
     if (!context) {
@@ -12,9 +24,12 @@ export const useAthletes = () => {
 };
 
 export const AthleteProvider = ({ children }) => {
-    const { token, API_BASE_URL, isAuthenticated } = useAuth();
+    const { user, token, API_BASE_URL, isAuthenticated } = useAuth();
     const [athletes, setAthletes] = useState([]);
     const [loading, setLoading] = useState(false);
+    
+    const sport = user?.sport || 'Football';
+    const sportPositions = getSportPositions(sport);
 
     // Performance data for the graph
     const [performanceData, setPerformanceData] = useState([]);
@@ -189,12 +204,11 @@ export const AthleteProvider = ({ children }) => {
 
     const getAthleteStats = () => {
         const total = athletes.length;
-        const byPosition = {
-            Forward: athletes.filter(a => a.position === 'Forward').length,
-            Midfielder: athletes.filter(a => a.position === 'Midfielder').length,
-            Defender: athletes.filter(a => a.position === 'Defender').length,
-            Goalkeeper: athletes.filter(a => a.position === 'Goalkeeper').length
-        };
+        const byPosition = {};
+        
+        sportPositions.forEach(pos => {
+            byPosition[pos] = athletes.filter(a => a.position === pos).length;
+        });
         
         return { total, byPosition };
     };
@@ -273,7 +287,9 @@ export const AthleteProvider = ({ children }) => {
         addPerformanceRecord,
         fetchAthletes,
         fetchPerformanceData,
-        loading
+        loading,
+        sportPositions,
+        sport
     };
 
     return (
