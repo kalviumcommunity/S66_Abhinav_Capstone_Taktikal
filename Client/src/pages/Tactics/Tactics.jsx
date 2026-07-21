@@ -9,13 +9,11 @@ import calendarIcon from "../../assets/calendar@1x.svg";
 import searchIcon from "../../assets/search@1x.svg";
 import notificationIcon from "../../assets/notification@1x.svg";
 import { useAuth } from "../../context/AuthContext";
-import { useCoach } from "../../context/CoachContext";
 
 export default function Tactics() {
     // Formation state
     // Hook up auth & contexts
     const { user } = useAuth();
-    const { events, setEvents, activities: profileActivities, setActivities: setProfileActivities } = useCoach(); // sync for checklist
     const sportName = user?.sport || "Football";
 
     const sportConfig = {
@@ -124,6 +122,94 @@ export default function Tactics() {
             bgSize: "contain",
             bgShape: "none",
             borderRadius: "0%"
+        },
+        "Basketball": {
+            formations: {
+                "2-3 Zone Defense": [
+                    { x: 0.35, y: 0.70, position: "PG" },
+                    { x: 0.65, y: 0.70, position: "SG" },
+                    { x: 0.25, y: 0.35, position: "SF" },
+                    { x: 0.50, y: 0.25, position: "C" },
+                    { x: 0.75, y: 0.35, position: "PF" }
+                ],
+                "Picks & Roll Offense": [
+                    { x: 0.50, y: 0.80, position: "PG" },
+                    { x: 0.30, y: 0.60, position: "SG" },
+                    { x: 0.50, y: 0.50, position: "C" },
+                    { x: 0.75, y: 0.55, position: "SF" },
+                    { x: 0.20, y: 0.30, position: "PF" }
+                ]
+            },
+            bgImage: `linear-gradient(to bottom, #d97706, #92400e)`,
+            bgColor: "#92400e",
+            bgSize: "cover",
+            bgShape: "none",
+            borderRadius: "4px"
+        },
+        "Chess": {
+            formations: {
+                "Sicilian Defense Setup": [
+                    { x: 0.50, y: 0.85, position: "GM-C" },
+                    { x: 0.35, y: 0.65, position: "OPENING" },
+                    { x: 0.65, y: 0.65, position: "TACTICS" },
+                    { x: 0.30, y: 0.40, position: "BLITZ" },
+                    { x: 0.70, y: 0.30, position: "ENDGAME" }
+                ],
+                "King's Indian Attack": [
+                    { x: 0.50, y: 0.85, position: "GM-C" },
+                    { x: 0.45, y: 0.60, position: "OPENING" },
+                    { x: 0.55, y: 0.50, position: "TACTICS" },
+                    { x: 0.25, y: 0.35, position: "BLITZ" },
+                    { x: 0.75, y: 0.25, position: "ENDGAME" }
+                ]
+            },
+            bgImage: `linear-gradient(45deg, #1f2937 25%, #374151 25%, #374151 50%, #1f2937 50%, #1f2937 75%, #374151 75%, #374151 100%)`,
+            bgColor: "#1f2937",
+            bgSize: "40px 40px",
+            bgShape: "none",
+            borderRadius: "4px"
+        },
+        "Table Tennis": {
+            formations: {
+                "Aggressive Counter-Loop": [
+                    { x: 0.50, y: 0.80, position: "ATTACK" },
+                    { x: 0.30, y: 0.70, position: "SERVE" },
+                    { x: 0.70, y: 0.60, position: "CHOP" },
+                    { x: 0.50, y: 0.30, position: "DBL" }
+                ],
+                "Defensive Chop Block": [
+                    { x: 0.50, y: 0.85, position: "CHOP" },
+                    { x: 0.25, y: 0.65, position: "SERVE" },
+                    { x: 0.75, y: 0.65, position: "ATTACK" },
+                    { x: 0.50, y: 0.25, position: "DBL" }
+                ]
+            },
+            bgImage: `linear-gradient(to bottom, #1e3a8a, #1d4ed8)`,
+            bgColor: "#1e3a8a",
+            bgSize: "cover",
+            bgShape: "none",
+            borderRadius: "4px"
+        },
+        "Badminton": {
+            formations: {
+                "Front-Back Attack": [
+                    { x: 0.50, y: 0.35, position: "NET" },
+                    { x: 0.50, y: 0.80, position: "SMASH" },
+                    { x: 0.30, y: 0.60, position: "SINGLES" },
+                    { x: 0.70, y: 0.60, position: "DOUBLES" }
+                ],
+                "Side-by-Side Defense": [
+                    { x: 0.35, y: 0.70, position: "DEF-L" },
+                    { x: 0.65, y: 0.70, position: "DEF-R" },
+                    { x: 0.50, y: 0.40, position: "NET" },
+                    { x: 0.50, y: 0.85, position: "REAR" }
+                ]
+            },
+            bgImage: `linear-gradient(to bottom, #047857, #065f46)`,
+            bgColor: "#047857",
+            bgSize: "cover",
+            bgShape: "none",
+            borderRadius: "4px"
         }
     };
 
@@ -145,21 +231,82 @@ export default function Tactics() {
         localStorage.setItem('tactics_saved_formations', JSON.stringify(savedFormations));
     }, [savedFormations]);
 
+    // Sport-specific activity defaults
+    const getSportActivities = (s) => {
+        switch (s) {
+            case "Cricket":
+                return [
+                    { text: "Net batting & bowling session", checked: true },
+                    { text: "Slip catching & fielding drills", checked: false },
+                    { text: "Run-rate scenario practice", checked: false }
+                ];
+            case "Volleyball":
+                return [
+                    { text: "Overhead set & spike drills", checked: true },
+                    { text: "5-1 rotation transition", checked: false },
+                    { text: "Block & dig reaction training", checked: false }
+                ];
+            case "Basketball":
+                return [
+                    { text: "Free-throw & 3-point shooting", checked: true },
+                    { text: "Pick-and-roll execution", checked: false },
+                    { text: "Full-court defensive press", checked: false }
+                ];
+            case "Chess":
+                return [
+                    { text: "Opening line study & prep", checked: true },
+                    { text: "Daily tactical puzzle solving (30m)", checked: false },
+                    { text: "Rook & endgame technique practice", checked: false }
+                ];
+            case "Table Tennis":
+                return [
+                    { text: "Serve spin & placement variation", checked: true },
+                    { text: "Third-ball attack & counter-looping", checked: false },
+                    { text: "Multi-ball speed drills", checked: false }
+                ];
+            case "Badminton":
+                return [
+                    { text: "Smash & steep angle drop shots", checked: true },
+                    { text: "Net kill & shadow footwork", checked: false },
+                    { text: "Doubles rotation & defense", checked: false }
+                ];
+            case "Handball":
+                return [
+                    { text: "Fast break & wing finishing", checked: true },
+                    { text: "6-0 wall defense drills", checked: false },
+                    { text: "7m penalty shot practice", checked: false }
+                ];
+            case "Rugby":
+                return [
+                    { text: "Scrum & lineout set-piece drills", checked: true },
+                    { text: "Ruck clearing & tackle technique", checked: false },
+                    { text: "Backline passing movement", checked: false }
+                ];
+            case "Football":
+            default:
+                return [
+                    { text: "Pass-and-move warm-up", checked: true },
+                    { text: "Tactical positioning & shape", checked: false },
+                    { text: "Set-piece & penalty practice", checked: false }
+                ];
+        }
+    };
+
     // Checklist state
     const [activities, setActivities] = useState(() => {
-        if (user && user.tactics_checklist) return user.tactics_checklist;
-        const saved = localStorage.getItem('tactics_checklist');
+        if (user && user.tactics_checklist && user.tactics_checklist.length > 0) return user.tactics_checklist;
+        const saved = localStorage.getItem(`tactics_checklist_${sportName}`);
         if (saved) return JSON.parse(saved);
-        return [
-            { text: "Warm-up drills", checked: true },
-            { text: "Position training", checked: false },
-            { text: "Conditioning exercises", checked: false },
-        ];
+        return getSportActivities(sportName);
     });
 
     useEffect(() => {
-        localStorage.setItem('tactics_checklist', JSON.stringify(activities));
-    }, [activities]);
+        setActivities(getSportActivities(sportName));
+    }, [sportName]);
+
+    useEffect(() => {
+        localStorage.setItem(`tactics_checklist_${sportName}`, JSON.stringify(activities));
+    }, [activities, sportName]);
     const [newActivity, setNewActivity] = useState("");
 
     // Search state
@@ -167,16 +314,12 @@ export default function Tactics() {
     const [searchResults, setSearchResults] = useState([]);
     const [showResults, setShowResults] = useState(false);
 
-    // Search data
+    // Search data dynamically tailored per sport
     const searchData = [
-        { id: 1, title: `${baseFormations[0]} Formation`, type: 'formation' },
-        { id: 2, title: `${baseFormations[1] || baseFormations[0]} Formation`, type: 'formation' },
+        { id: 1, title: `${baseFormations[0]} Strategy`, type: 'formation' },
+        { id: 2, title: `${baseFormations[1] || baseFormations[0]} Setup`, type: 'formation' },
         { id: 3, title: 'Custom Formation', type: 'formation' },
-        { id: 4, title: 'Warm-up drills', type: 'training' },
-        { id: 5, title: 'Position training', type: 'training' },
-        { id: 6, title: 'Conditioning exercises', type: 'training' },
-        { id: 7, title: 'Training Checklist', type: 'training' },
-        { id: 8, title: 'Formation Type', type: 'formation' },
+        ...activities.map((a, idx) => ({ id: idx + 4, title: a.text, type: 'training' }))
     ];
 
     // Format initial player positions depending on configuration array
@@ -267,6 +410,45 @@ export default function Tactics() {
                 if (yPercent > 85) return "WK";
                 return "GULLY";
             }
+        }
+
+        if (sport === "Basketball") {
+            if (yPercent < 40) {
+                if (xPercent < 35) return "SF";
+                if (xPercent > 65) return "PF";
+                return "C";
+            } else if (yPercent < 70) {
+                if (xPercent < 45) return "PG";
+                return "SG";
+            } else {
+                return "PG";
+            }
+        }
+
+        if (sport === "Chess") {
+            if (yPercent < 40) return "ENDGAME";
+            if (yPercent < 70) {
+                if (xPercent < 50) return "BLITZ";
+                return "TACTICS";
+            }
+            if (xPercent < 50) return "OPENING";
+            return "GM-C";
+        }
+
+        if (sport === "Table Tennis") {
+            if (yPercent < 50) return "DBL";
+            if (xPercent < 40) return "SERVE";
+            if (xPercent > 60) return "CHOP";
+            return "ATTACK";
+        }
+
+        if (sport === "Badminton") {
+            if (yPercent < 45) return "NET";
+            if (yPercent < 75) {
+                if (xPercent < 50) return "SINGLES";
+                return "DOUBLES";
+            }
+            return "SMASH";
         }
 
         // Default Football field zones

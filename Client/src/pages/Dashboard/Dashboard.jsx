@@ -18,7 +18,7 @@ import {
 export default function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showEditModal, setShowEditModal] = useState(false);
-    const { performanceData, updatePerformanceData, getAthleteStats, sportPositions, sport } = useAthletes();
+    const { performanceData, updatePerformanceData, getAthleteStats, sportPositions } = useAthletes();
 
     const handleSearch = (query) => {
         setSearchQuery(query);
@@ -34,8 +34,14 @@ export default function Dashboard() {
         updatePerformanceData(newData);
     };
 
-    const athleteStats = getAthleteStats();
-    const previousWeekCount = Math.max(0, athleteStats.total - 2); // Simulated previous week count
+    const athleteStats = getAthleteStats() || { total: 0, byPosition: {} };
+    const safePositions = sportPositions || [];
+    const safeByPosition = athleteStats.byPosition || {};
+    const lastPosition = safePositions.length > 0 ? safePositions[safePositions.length - 1] : null;
+    const subOrLastCount = lastPosition ? (safeByPosition[lastPosition] || 0) : 0;
+    const activePlayers = Math.max(0, (athleteStats.total || 0) - subOrLastCount);
+    const filledPositionsCount = Object.values(safeByPosition).filter(count => count > 0).length;
+    const previousWeekCount = Math.max(0, (athleteStats.total || 0) - 2);
 
     return (
         <div className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-[#212121] min-h-screen">
@@ -55,7 +61,7 @@ export default function Dashboard() {
                             <img src={searchIcon} alt="Search" className="w-4 h-4 mr-2" />
                             <input
                                 type="text"
-                                placeholder="Search dashboard..."
+                                placeholder="Search metrics..."
                                 value={searchQuery}
                                 onChange={(e) => handleSearch(e.target.value)}
                                 className="outline-none text-sm bg-transparent text-black placeholder-gray-500 w-full sm:w-32 md:w-40 font-normal"
@@ -75,10 +81,10 @@ export default function Dashboard() {
                                 Total Athletes
                             </p>
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight mb-1">
-                                {athleteStats.total}
+                                {athleteStats.total || 0}
                             </h3>
                             <p className="text-green-400 text-xs md:text-sm font-normal">
-                                {athleteStats.total > previousWeekCount ? '+' : ''}{athleteStats.total - previousWeekCount} from last week
+                                {athleteStats.total > previousWeekCount ? '+' : ''}{(athleteStats.total || 0) - previousWeekCount} from last week
                             </p>
                         </div>
                         <img src={teamIcon} alt="Athletes Icon" className="w-6 h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 flex-shrink-0 opacity-80" />
@@ -91,7 +97,7 @@ export default function Dashboard() {
                                 Active Players
                             </p>
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight mb-1">
-                                {athleteStats.total - (athleteStats.byPosition[sportPositions[sportPositions.length - 1]] || 0)}
+                                {activePlayers}
                             </h3>
                             <p className="text-blue-400 text-xs md:text-sm font-normal">Field players</p>
                         </div>
@@ -105,7 +111,7 @@ export default function Dashboard() {
                                 Positions Filled
                             </p>
                             <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-[#F5F5DC] leading-tight mb-1">
-                                {Object.values(athleteStats.byPosition).filter(count => count > 0).length}/{sportPositions.length}
+                                {filledPositionsCount}/{safePositions.length}
                             </h3>
                             <p className="text-yellow-400 text-xs md:text-sm font-normal">Position coverage</p>
                         </div>

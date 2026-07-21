@@ -4,12 +4,12 @@ const athleteSchema = mongoose.Schema(
     {
         name: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
         position: {
             type: String,
-            required: true,
-            enum: ['Forward', 'Midfielder', 'Defender', 'Goalkeeper']
+            required: true
         },
         speed: {
             type: Number,
@@ -31,15 +31,21 @@ const athleteSchema = mongoose.Schema(
         },
         isActive: {
             type: Boolean,
-            default: true
+            default: true,
+            index: true
         },
         coach: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Coach',
-            required: true
+            required: true,
+            index: true
         }
     },
     { timestamps: true }
 );
+
+// Compound index for querying active team roster per coach
+athleteSchema.index({ coach: 1, isActive: 1, name: 1 });
+athleteSchema.index({ coach: 1, isActive: 1, position: 1 });
 
 module.exports = mongoose.model('Athlete', athleteSchema);

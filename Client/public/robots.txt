@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /dashboard
+Disallow: /athletes
+Disallow: /tactics
+Disallow: /ai-assistant
+Disallow: /profile
+Disallow: /api/
+
+Allow: /
+Allow: /login
+Allow: /signup
+Allow: /terms
+Allow: /privacy
+
+Sitemap: https://taktikal.netlify.app/sitemap.xml

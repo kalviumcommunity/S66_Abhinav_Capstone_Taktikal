@@ -1,47 +1,56 @@
-# Project Title:  
-**Sports Coach Management App**
+# 🏆 Taktikal — Sports Coach Management & Performance Platform
 
-**Frontend deploy link :- https://taktikal.netlify.app/ -**
+**Production Link:** [https://taktikal.netlify.app/](https://taktikal.netlify.app/)
 
-## Project Overview:  
-This project is built for sports coaches to manage athletes, plan training, track performance, and create game strategies. It also includes an AI chatbot to assist with training suggestions, diet plans, and motivational tips.
+## 📌 Project Overview
+Taktikal is a modern web application designed for sports coaches to manage team rosters across multiple sports (Football, Cricket, Volleyball, Handball, Rugby), plan tactical formations on interactive boards, track athlete performance metrics over time, and consult an AI Sports Coach Assistant for drills and recovery strategies.
 
-## Key Features:  
-- **Coach Authentication:**  
-    Coaches can sign up, log in, and manage their dashboard.  
+---
 
-- **Athlete Management:**  
-    Store and view details of athletes, training plans, and match history.  
+## ✨ Key Features
+- 🔑 **Secure Authentication**: JWT + HttpOnly cookie authentication, rate-limited auth endpoints, and mass-assignment protection.
+- 🏃 **Athlete Management**: Roster creation, position filtering, performance scoring, and search capabilities.
+- 📈 **Performance Analytics**: Visual performance trends using Recharts with atomic dataset updating.
+- 📋 **Tactics & Formation Builder**: Interactive pitch builder supporting multi-sport formations (4-3-3, 4-4-2, 5-1 Volleyball, Cricket field setups).
+- 🤖 **AI Coach Assistant**: Sports intelligence engine offering training plans, recovery guidance, and nutrition advice.
+- ⚖️ **Legal Compliance**: Complete Terms of Service, Privacy Policy, and SEO metadata.
 
-- **Performance Analysis:**  
-    Track and review athlete performance data.  
+---
 
-- **Training Scheduler:**  
-    Create and manage weekly or monthly training schedules.  
+## 🛠️ Tech Stack
+- **Frontend**: React 19, Vite 6, Tailwind CSS v4, Recharts, React Router v7
+- **Backend**: Node.js, Express 4, Mongoose 8, Helmet, Express-Rate-Limit, Morgan
+- **Database**: MongoDB Atlas with compound indexes
+- **Testing**: Vitest & Supertest integration suite
 
-- **Tactics & Formations Builder:**  
-    Drag-and-drop interface to plan team formations and strategies.  
+---
 
-- **Match Planner:**  
-    Store upcoming match details like date, opponent, and location.  
+## 🚀 Local Setup & Development
 
-- **AI Chatbot:**  
-    Get training advice, diet plans, rest tips, and motivation using AI.
+### 1. Install Dependencies
+```bash
+npm run install:all
+```
 
-## Tech Stack:  
-- **Frontend:** React.js with Tailwind CSS  
-- **Backend:** Node.js with Express  
-- **Database:** MongoDB  
-- **AI:** OpenAI API  
-- **Design Tool:** Figma  
-- **API Testing:** Postman  
-- **Version Control:** GitHub  
+### 2. Configure Environment Variables
+Copy `.env.example` in both `Server` and `Client` directories:
+```bash
+cp Server/.env.example Server/.env
+cp Client/.env.example Client/.env
+```
 
-## Why This Project?  
-I chose this project to create a helpful tool for sports coaches. Many coaches don’t have digital platforms to manage their team and training efficiently.  
+### 3. Run Development Servers
+```bash
+# Start Server & Client
+npm run dev:server
+npm run dev:client
+```
 
-Through this project, I will learn:  
-- Building dashboards and forms.  
-- Using AI for real-world use cases.  
-- Creating interactive planners and visual tools.  
-- Managing and analyzing data effectively.  
+### 4. Run Test Suite & Build Verification
+```bash
+# Run Server integration tests
+npm run test:server
+
+# Production build check
+npm run build:client
+```

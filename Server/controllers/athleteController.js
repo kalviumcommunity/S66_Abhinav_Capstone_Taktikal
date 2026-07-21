@@ -1,106 +1,135 @@
 const Athlete = require('../models/athleteModel');
 
+// Helper to escape regex special characters for NoSQL search queries
+const escapeRegex = (text) => {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+};
+
 // Add new athlete
 const addAthlete = async (req, res) => {
     try {
         const { name, position, speed, strength, stamina } = req.body;
 
-        // Validation
-        if (!name || !position || !speed || !strength || !stamina) {
+        if (!name || !position || speed === undefined || strength === undefined || stamina === undefined) {
             return res.status(400).json({ message: 'Please provide all required fields: name, position, speed, strength, stamina' });
         }
 
-        // Validate position
-        const validPositions = ['Forward', 'Midfielder', 'Defender', 'Goalkeeper'];
+        const validPositions = [
+            'Forward', 'Midfielder', 'Defender', 'Goalkeeper', // Football
+            'Batsman', 'Bowler', 'All-Rounder', 'Wicketkeeper', // Cricket
+            'Setter', 'Libero', 'Middle Blocker', 'Outside Hitter', 'Opposite Hitter', // Volleyball
+            'Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center', // Basketball
+            'Left Wing', 'Right Wing', 'Pivot', 'Left Back', 'Right Back', // Handball
+            'Prop', 'Hooker', 'Lock', 'Flanker', 'Number 8', 'Scrum-half', 'Fly-half', 'Centre', 'Wing', 'Fullback', // Rugby
+            'Grandmaster Candidate', 'Blitz Specialist', 'Endgame Strategist', 'Opening Analyst', 'Tactical Solver', // Chess
+            'Attacker', 'Defensive Chopper', 'Serve Specialist', 'Doubles Partner', // Table Tennis
+            'Singles Specialist', 'Doubles Specialist', 'Net Specialist', 'Smash Specialist' // Badminton
+        ];
         if (!validPositions.includes(position)) {
-            return res.status(400).json({ message: 'Invalid position' });
+            return res.status(400).json({ message: 'Invalid position/role specified' });
         }
 
-        // Validate stats (1-10)
-        if (speed < 1 || speed > 10 || strength < 1 || strength > 10 || stamina < 1 || stamina > 10) {
-            return res.status(400).json({ message: 'Speed, strength, and stamina must be between 1 and 10' });
+        const speedNum = Number(speed);
+        const strengthNum = Number(strength);
+        const staminaNum = Number(stamina);
+
+        if (speedNum < 1 || speedNum > 10 || strengthNum < 1 || strengthNum > 10 || staminaNum < 1 || staminaNum > 10) {
+            return res.status(400).json({ message: 'Speed, strength, and stamina must be numbers between 1 and 10' });
         }
 
         const newAthlete = new Athlete({
-            name,
+            name: name.trim(),
             position,
-            speed,
-            strength,
-            stamina,
+            speed: speedNum,
+            strength: strengthNum,
+            stamina: staminaNum,
             coach: req.user._id
         });
 
         await newAthlete.save();
 
         res.status(201).json({
-            message: "Athlete added successfully",
-            athlete: newAthlete
+            message: 'Athlete added successfully',
+            athlete: {
+                ...newAthlete.toObject(),
+                id: newAthlete._id,
+                averageScore: Math.round((newAthlete.speed + newAthlete.strength + newAthlete.stamina) / 3)
+            }
         });
     } catch (error) {
-        console.error('Add athlete error:', error);
-        res.status(500).json({ message: error.message });
+        console.error('Add athlete error:', error.message);
+        res.status(500).json({ message: 'Failed to add athlete' });
     }
 };
 
-// Get all athletes for the authenticated coach
+// Get all athletes for authenticated coach (with NoSQL injection protection, whitelist sorting, and pagination)
 const getAllAthletes = async (req, res) => {
     try {
-        const { position, search, sortBy, sortOrder } = req.query;
+        const { position, search, sortBy, sortOrder, page = 1, limit = 50 } = req.query;
 
         let query = { coach: req.user._id, isActive: true };
 
-        // Filter by position
+        // Position filter
         if (position && position !== 'All Positions') {
             query.position = position;
         }
 
-        // Search functionality
-        if (search) {
+        // Sanitized NoSQL search
+        if (search && search.trim() !== '') {
+            const cleanSearch = escapeRegex(search.trim());
             query.$or = [
-                { name: { $regex: search, $options: 'i' } },
-                { position: { $regex: search, $options: 'i' } }
+                { name: { $regex: cleanSearch, $options: 'i' } },
+                { position: { $regex: cleanSearch, $options: 'i' } }
             ];
         }
 
-        // Sorting
+        // Whitelisted sort parameters
+        const allowedSortFields = ['name', 'position', 'speed', 'strength', 'stamina', 'createdAt', 'score'];
+        const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : 'createdAt';
+        const order = sortOrder === 'desc' ? -1 : 1;
+
         let sortOptions = {};
-        if (sortBy) {
-            const order = sortOrder === 'desc' ? -1 : 1;
-            if (sortBy === 'score') {
-                // For average score, we'll sort after calculation
-                sortOptions = { name: 1 };
-            } else {
-                sortOptions[sortBy] = order;
-            }
-        } else {
-            sortOptions = { createdAt: -1 };
+        if (safeSortBy !== 'score') {
+            sortOptions[safeSortBy] = order;
         }
 
-        const athletes = await Athlete.find(query).sort(sortOptions);
+        const pageNum = Math.max(1, parseInt(page) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 50));
+        const skip = (pageNum - 1) * limitNum;
 
-        // Calculate average scores and sort if needed
-        const athletesWithScores = athletes.map(athlete => {
+        const total = await Athlete.countDocuments(query);
+        const athletes = await Athlete.find(query)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limitNum);
+
+        let athletesWithScores = athletes.map(athlete => {
             const avgScore = Math.round((athlete.speed + athlete.strength + athlete.stamina) / 3);
             return {
                 ...athlete.toObject(),
-                id: athlete._id, // Add id field for frontend compatibility
+                id: athlete._id,
                 averageScore: avgScore
             };
         });
 
-        // Sort by score if requested
-        if (sortBy === 'score') {
+        // Sort by calculated average score if requested
+        if (safeSortBy === 'score') {
             athletesWithScores.sort((a, b) => {
-                return sortOrder === 'desc' ? b.averageScore - a.averageScore : a.averageScore - b.averageScore;
+                return order === -1 ? b.averageScore - a.averageScore : a.averageScore - b.averageScore;
             });
         }
 
         res.status(200).json({
-            athletes: athletesWithScores
+            athletes: athletesWithScores,
+            pagination: {
+                total,
+                page: pageNum,
+                pages: Math.ceil(total / limitNum)
+            }
         });
     } catch (error) {
-        console.error('Get athletes error:', error);
-        res.status(500).json({ message: "Server Error" });
+        console.error('Get athletes error:', error.message);
+        res.status(500).json({ message: 'Server Error fetching athletes' });
     }
 };
 
@@ -115,19 +144,17 @@ const getAthleteById = async (req, res) => {
         });
 
         if (!athlete) {
-            return res.status(404).json({ message: "Athlete not found" });
+            return res.status(404).json({ message: 'Athlete not found' });
         }
 
-        const athleteWithScore = {
+        res.status(200).json({
             ...athlete.toObject(),
             id: athlete._id,
             averageScore: Math.round((athlete.speed + athlete.strength + athlete.stamina) / 3)
-        };
-
-        res.status(200).json(athleteWithScore);
+        });
     } catch (error) {
-        console.error('Get athlete by ID error:', error);
-        res.status(500).json({ message: "Server Error" });
+        console.error('Get athlete by ID error:', error.message);
+        res.status(500).json({ message: 'Server Error fetching athlete' });
     }
 };
 
@@ -135,28 +162,36 @@ const getAthleteById = async (req, res) => {
 const updateAthlete = async (req, res) => {
     try {
         const { id } = req.params;
-        const updateData = req.body;
+        const { name, position, speed, strength, stamina } = req.body;
+
+        const updateFields = {};
+        if (name !== undefined) updateFields.name = name.trim();
+        if (position !== undefined) updateFields.position = position;
+        if (speed !== undefined) updateFields.speed = Number(speed);
+        if (strength !== undefined) updateFields.strength = Number(strength);
+        if (stamina !== undefined) updateFields.stamina = Number(stamina);
 
         const athlete = await Athlete.findOneAndUpdate(
             { _id: id, coach: req.user._id, isActive: true },
-            updateData,
+            updateFields,
             { new: true, runValidators: true }
         );
 
         if (!athlete) {
-            return res.status(404).json({ message: "Athlete not found" });
+            return res.status(404).json({ message: 'Athlete not found' });
         }
 
         res.status(200).json({
-            message: "Athlete updated successfully",
+            message: 'Athlete updated successfully',
             athlete: {
                 ...athlete.toObject(),
-                id: athlete._id
+                id: athlete._id,
+                averageScore: Math.round((athlete.speed + athlete.strength + athlete.stamina) / 3)
             }
         });
     } catch (error) {
-        console.error('Update athlete error:', error);
-        res.status(500).json({ message: error.message });
+        console.error('Update athlete error:', error.message);
+        res.status(500).json({ message: 'Failed to update athlete' });
     }
 };
 
@@ -165,14 +200,13 @@ const deleteAthlete = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Check if this is the last athlete
         const athleteCount = await Athlete.countDocuments({
             coach: req.user._id,
             isActive: true
         });
 
         if (athleteCount <= 1) {
-            return res.status(400).json({ message: "You must have at least one athlete in your team." });
+            return res.status(400).json({ message: 'You must have at least one athlete in your team.' });
         }
 
         const athlete = await Athlete.findOneAndUpdate(
@@ -182,13 +216,13 @@ const deleteAthlete = async (req, res) => {
         );
 
         if (!athlete) {
-            return res.status(404).json({ message: "Athlete not found" });
+            return res.status(404).json({ message: 'Athlete not found' });
         }
 
-        res.status(200).json({ message: "Athlete deleted successfully" });
+        res.status(200).json({ message: 'Athlete deleted successfully' });
     } catch (error) {
-        console.error('Delete athlete error:', error);
-        res.status(500).json({ message: "Server Error" });
+        console.error('Delete athlete error:', error.message);
+        res.status(500).json({ message: 'Server Error deleting athlete' });
     }
 };
 
@@ -211,8 +245,8 @@ const getAthleteStats = async (req, res) => {
 
         res.status(200).json(stats);
     } catch (error) {
-        console.error('Get athlete stats error:', error);
-        res.status(500).json({ message: "Server Error" });
+        console.error('Get athlete stats error:', error.message);
+        res.status(500).json({ message: 'Server Error fetching stats' });
     }
 };
 

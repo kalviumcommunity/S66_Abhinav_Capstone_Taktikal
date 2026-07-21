@@ -10,6 +10,8 @@ import AIAssistant from '../pages/Ai/Ai'
 import Profile from '../pages/UserProfile/Profile'
 import SignUp from '../pages/Register/SignUp'
 import Login from '../pages/Register/LogIn'
+import TermsOfService from '../pages/Legal/TermsOfService'
+import PrivacyPolicy from '../pages/Legal/PrivacyPolicy'
 
 const AllRoutes = () => {
   return (
@@ -18,6 +20,8 @@ const AllRoutes = () => {
       <Route path="/" element={<HomePage />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
 
       {/* Protected Routes (Dashboard and related pages) */}
       <Route path="/dashboard" element={

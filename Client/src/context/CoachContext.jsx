@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
 
 const CoachContext = createContext();
@@ -12,12 +12,10 @@ export const useCoach = () => {
 };
 
 export const CoachProvider = ({ children }) => {
-    const { user, token, API_BASE_URL, isAuthenticated } = useAuth();
+    const { user, setUser, token, API_BASE_URL, isAuthenticated } = useAuth();
 
-    // Track if this is a new user (first time setup)
     const [isNewUser, setIsNewUser] = useState(true);
 
-    // Profile data state - initialize from authenticated user
     const [profileData, setProfileData] = useState({
         name: "",
         title: "",
@@ -28,7 +26,6 @@ export const CoachProvider = ({ children }) => {
         sport: ""
     });
 
-    // Stats data state - start with empty values
     const [statsData, setStatsData] = useState({
         teamsCoached: "",
         currentAthletes: "",
@@ -36,7 +33,6 @@ export const CoachProvider = ({ children }) => {
         yearsActive: ""
     });
 
-    // Contacts data state - start with empty values
     const [contactsData, setContactsData] = useState({
         linkedin: "",
         twitter: "",
@@ -44,16 +40,10 @@ export const CoachProvider = ({ children }) => {
     });
 
     const [profileImage, setProfileImage] = useState(null);
+    const [events, setEvents] = useState([]);
+    const [activities, setActivities] = useState([]);
 
-    const [events, setEvents] = useState(() => {
-        return user?.events || [];
-    });
-
-    const [activities, setActivities] = useState(() => {
-        return user?.activities || [];
-    });
-
-    // Load profile data from authenticated user
+    // Load profile data from authenticated user object
     useEffect(() => {
         if (user && isAuthenticated()) {
             setProfileData({
@@ -79,52 +69,22 @@ export const CoachProvider = ({ children }) => {
                 videoChannel: user.socialLinks?.videoChannel || ""
             });
 
-            setIsNewUser(user.isNewUser || false);
+            setIsNewUser(user.isNewUser !== undefined ? user.isNewUser : false);
             setProfileImage(user.profileImage || null);
             setEvents(user.events || []);
             setActivities(user.activities || []);
-            
-            // Re-sync local storage so Tactics and older pages don't freak out
-            localStorage.setItem('coach_events', JSON.stringify(user.events || []));
-            localStorage.setItem('coach_activities', JSON.stringify(user.activities || []));
-            if (user.tactics_saved_formations) localStorage.setItem('tactics_saved_formations', JSON.stringify(user.tactics_saved_formations));
-            if (user.tactics_checklist) localStorage.setItem('tactics_checklist', JSON.stringify(user.tactics_checklist));
         } else {
-            // Clear data when not authenticated
-            setProfileData({
-                name: "",
-                title: "",
-                description: "",
-                email: "",
-                location: "",
-                athletes: "",
-                sport: ""
-            });
-            setStatsData({
-                teamsCoached: "",
-                currentAthletes: "",
-                championships: "",
-                yearsActive: ""
-            });
-            setContactsData({
-                linkedin: "",
-                twitter: "",
-                videoChannel: ""
-            });
+            setProfileData({ name: "", title: "", description: "", email: "", location: "", athletes: "", sport: "" });
+            setStatsData({ teamsCoached: "", currentAthletes: "", championships: "", yearsActive: "" });
+            setContactsData({ linkedin: "", twitter: "", videoChannel: "" });
             setIsNewUser(true);
             setProfileImage(null);
             setEvents([]);
             setActivities([]);
-            
-            localStorage.removeItem('coach_events');
-            localStorage.removeItem('coach_activities');
-            localStorage.removeItem('tactics_saved_formations');
-            localStorage.removeItem('tactics_checklist');
         }
-    }, [user]); // Removed isAuthenticated from dependencies to avoid circular calls
+    }, [user, isAuthenticated]);
 
-    // Check if profile is complete (only required fields)
-    const isProfileComplete = () => {
+    const isProfileComplete = useCallback(() => {
         const requiredFields = [
             profileData.name,
             profileData.title,
@@ -132,42 +92,38 @@ export const CoachProvider = ({ children }) => {
             profileData.location
         ];
 
-        // Check if all required fields are filled and not just whitespace
         const allFieldsFilled = requiredFields.every(field => field && field.trim() !== '');
-
-        // Check if email is valid
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         const isEmailValid = profileData.email && emailRegex.test(profileData.email.trim());
 
         return allFieldsFilled && isEmailValid;
-    };
+    }, [profileData]);
 
-    // Check if basic profile is complete (for navigation)
-    const isBasicProfileComplete = () => {
-        return isProfileComplete();
-    };
-
-    // Update profile data locally
-    const updateProfileData = (newData) => {
+    const updateProfileData = useCallback((newData) => {
         setProfileData(prev => ({ ...prev, ...newData }));
         return { success: true };
-    };
+    }, []);
 
-    // Update stats data locally
-    const updateStatsData = (newData) => {
+    const updateStatsData = useCallback((newData) => {
         setStatsData(prev => ({ ...prev, ...newData }));
         return { success: true };
-    };
+    }, []);
 
-    // Update contacts data locally
-    const updateContactsData = (newData) => {
+    const updateContactsData = useCallback((newData) => {
         setContactsData(prev => ({ ...prev, ...newData }));
         return { success: true };
-    };
+    }, []);
 
-    // Save all profile data to backend
+    const getAuthHeaders = useCallback(() => {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }, [token]);
+
     const saveProfileToBackend = async () => {
-        if (!isAuthenticated() || !token) {
+        if (!isAuthenticated()) {
             return { success: false, message: 'Not authenticated' };
         }
 
@@ -184,33 +140,21 @@ export const CoachProvider = ({ children }) => {
                     videoChannel: contactsData.videoChannel || ""
                 }
             };
-            
-            // Backup to local storage in case backend doesn't support it yet
-            localStorage.setItem('coach_sport', profileData.sport || "Football");
-            localStorage.setItem('coach_events', JSON.stringify(events));
-            localStorage.setItem('coach_activities', JSON.stringify(activities));
-            
-            // Extract local storage for tactics to send to backend too
-            const tactics_saved_formations = JSON.parse(localStorage.getItem('tactics_saved_formations') || '[]');
-            const tactics_checklist = JSON.parse(localStorage.getItem('tactics_checklist') || '[]');
-            
-            // Append tactics onto dataToSave
-            dataToSave.tactics_saved_formations = tactics_saved_formations;
-            dataToSave.tactics_checklist = tactics_checklist;
 
             const response = await fetch(`${API_BASE_URL}/auth/profile`, {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
+                headers: getAuthHeaders(),
+                credentials: 'include',
                 body: JSON.stringify(dataToSave)
             });
 
             const data = await response.json();
 
             if (response.ok) {
-                return { success: true };
+                if (data.coach && setUser) {
+                    setUser(data.coach);
+                }
+                return { success: true, coach: data.coach };
             } else {
                 return { success: false, message: data.message };
             }
@@ -220,24 +164,25 @@ export const CoachProvider = ({ children }) => {
         }
     };
 
-    // Complete profile setup
     const completeProfileSetup = async () => {
-        if (!isAuthenticated() || !token) {
+        if (!isAuthenticated()) {
             throw new Error('Not authenticated');
         }
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth/complete-setup`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: getAuthHeaders(),
+                credentials: 'include'
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 setIsNewUser(false);
+                if (setUser) {
+                    setUser(prev => prev ? ({ ...prev, isNewUser: false }) : prev);
+                }
                 return { success: true };
             } else {
                 return { success: false, message: data.message };
@@ -248,34 +193,7 @@ export const CoachProvider = ({ children }) => {
         }
     };
 
-    // Reset to new user state (for testing or logout)
-    const resetToNewUser = () => {
-        setIsNewUser(true);
-        setProfileData({
-            name: "",
-            title: "",
-            description: "",
-            email: "",
-            location: "",
-            athletes: ""
-        });
-        setStatsData({
-            teamsCoached: "",
-            currentAthletes: "",
-            championships: "",
-            yearsActive: ""
-        });
-        setContactsData({
-            linkedin: "",
-            twitter: "",
-            videoChannel: ""
-        });
-        setProfileImage(null);
-        setEvents([]);
-        setActivities([]);
-    };
-
-    const value = {
+    const value = useMemo(() => ({
         isNewUser,
         profileData,
         statsData,
@@ -290,12 +208,15 @@ export const CoachProvider = ({ children }) => {
         updateStatsData,
         updateContactsData,
         isProfileComplete,
-        isBasicProfileComplete,
         completeProfileSetup,
         saveProfileToBackend,
-        resetToNewUser,
         setIsNewUser
-    };
+    }), [
+        isNewUser, profileData, statsData, contactsData, profileImage,
+        events, activities, updateProfileData, updateStatsData,
+        updateContactsData, isProfileComplete, completeProfileSetup,
+        saveProfileToBackend
+    ]);
 
     return (
         <CoachContext.Provider value={value}>

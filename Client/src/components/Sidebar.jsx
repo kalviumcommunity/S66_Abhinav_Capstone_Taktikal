@@ -181,7 +181,11 @@ const Sidebar = () => {
                 </div>
 
                 {/* Bottom Profile */}
-                <div className="bg-[#000000]/30 border-t border-[#483C32] px-6 py-5 flex items-center gap-4 mt-auto">
+                <div
+                    onClick={() => navigate('/profile')}
+                    className="bg-[#000000]/30 border-t border-[#483C32] px-6 py-5 flex items-center gap-4 mt-auto cursor-pointer hover:bg-[#483C32]/40 transition-colors"
+                    title="Click to view & edit Profile"
+                >
                     <div className="bg-[#483C32] text-[#F5F5DC] w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold">
                         {getUserInitials()}
                     </div>

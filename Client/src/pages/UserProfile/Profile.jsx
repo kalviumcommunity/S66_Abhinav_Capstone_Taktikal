@@ -31,6 +31,108 @@ export default function Profile() {
         resetToNewUser
     } = useCoach();
 
+    const {
+        sendPasswordOTP,
+        verifyPasswordOTP,
+        changePasswordWithOTP,
+        deleteAccount,
+        logout
+    } = useAuth();
+
+    // Password Change Modal State
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [otpStep, setOtpStep] = useState(1);
+    const [otpCode, setOtpCode] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [otpLoading, setOtpLoading] = useState(false);
+    const [debugOtpBanner, setDebugOtpBanner] = useState(null);
+
+    // Delete Account Modal State
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteConfirmationInput, setDeleteConfirmationInput] = useState('');
+    const [deleteLoading, setDeleteLoading] = useState(false);
+
+    // OTP Handlers
+    const handleSendOTP = async () => {
+        setOtpLoading(true);
+        const res = await sendPasswordOTP();
+        setOtpLoading(false);
+
+        if (res.success) {
+            setOtpStep(2);
+            if (res.debugOtp) {
+                setDebugOtpBanner(res.debugOtp);
+            }
+            alert(res.message);
+        } else {
+            alert(res.message || 'Failed to send OTP');
+        }
+    };
+
+    const handleVerifyOTP = async () => {
+        if (!otpCode || otpCode.length !== 6) {
+            alert('Please enter the 6-digit OTP code');
+            return;
+        }
+
+        setOtpLoading(true);
+        const res = await verifyPasswordOTP(otpCode);
+        setOtpLoading(false);
+
+        if (res.success) {
+            setOtpStep(3);
+            alert('OTP verified! Enter your new password.');
+        } else {
+            alert(res.message || 'Invalid OTP code');
+        }
+    };
+
+    const handleChangePassword = async () => {
+        if (!newPassword || newPassword.length < 6) {
+            alert('New password must be at least 6 characters');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+
+        setOtpLoading(true);
+        const res = await changePasswordWithOTP(otpCode, newPassword);
+        setOtpLoading(false);
+
+        if (res.success) {
+            setShowPasswordModal(false);
+            setOtpStep(1);
+            setOtpCode('');
+            setNewPassword('');
+            setConfirmPassword('');
+            alert(res.message);
+        } else {
+            alert(res.message || 'Failed to update password');
+        }
+    };
+
+    // Delete Account Handler
+    const handleDeleteAccountConfirm = async () => {
+        if (deleteConfirmationInput !== 'DELETE MY ACCOUNT') {
+            alert('Type "DELETE MY ACCOUNT" exactly to confirm.');
+            return;
+        }
+
+        setDeleteLoading(true);
+        const res = await deleteAccount();
+        setDeleteLoading(false);
+
+        if (res.success) {
+            alert('Account deleted. Redirecting...');
+            navigate('/signup');
+        } else {
+            alert(res.message || 'Failed to delete account');
+        }
+    };
+
     // Start in edit mode for new users, or if profile is incomplete
     const [isEditing, setIsEditing] = useState(isNewUser || !isProfileComplete());
     const [editSection, setEditSection] = useState('profile'); // 'profile', 'stats', 'contacts'
@@ -684,6 +786,194 @@ export default function Profile() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Account Security & Danger Zone Section */}
+                    <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-lg p-4 md:p-5 shadow-lg mt-6">
+                        <h3 className="font-bold text-[#F5F5DC] text-lg md:text-xl leading-tight mb-2">Account Security & Danger Zone</h3>
+                        <p className="text-xs md:text-sm text-[#F5F5DC]/70 mb-4">Manage password reset via Email OTP, sign out of your session, or permanently delete your account.</p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            {/* Change Password Button */}
+                            <div className="bg-[#000000]/30 p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h4 className="font-bold text-[#F5F5DC] text-sm md:text-base">Change Password</h4>
+                                    <p className="text-xs text-[#F5F5DC]/70 mt-1">Receive a 6-digit OTP code to your email to update your password.</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        setShowPasswordModal(true);
+                                        setOtpStep(1);
+                                    }}
+                                    className="mt-4 w-full bg-[#483C32] hover:bg-[#5a4a3e] text-[#F5F5DC] py-2 px-3 rounded text-xs md:text-sm font-semibold transition duration-300"
+                                >
+                                    🔑 Send Email OTP
+                                </button>
+                            </div>
+
+                            {/* Logout Button */}
+                            <div className="bg-[#000000]/30 p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h4 className="font-bold text-[#F5F5DC] text-sm md:text-base">Log Out Session</h4>
+                                    <p className="text-xs text-[#F5F5DC]/70 mt-1">Safely end your current session and clear auth cookies.</p>
+                                </div>
+                                <button
+                                    onClick={() => {
+                                        logout();
+                                        navigate('/login');
+                                    }}
+                                    className="mt-4 w-full bg-amber-700/80 hover:bg-amber-600 text-white py-2 px-3 rounded text-xs md:text-sm font-semibold transition duration-300"
+                                >
+                                    🚪 Logout Account
+                                </button>
+                            </div>
+
+                            {/* Delete Account Button */}
+                            <div className="bg-red-950/30 border border-red-800/50 p-4 rounded-lg flex flex-col justify-between">
+                                <div>
+                                    <h4 className="font-bold text-red-300 text-sm md:text-base">Delete Account</h4>
+                                    <p className="text-xs text-red-200/70 mt-1">Permanently remove coach profile and athlete roster data from MongoDB.</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowDeleteModal(true)}
+                                    className="mt-4 w-full bg-red-700 hover:bg-red-600 text-white py-2 px-3 rounded text-xs md:text-sm font-semibold transition duration-300"
+                                >
+                                    🗑️ Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Email OTP Password Reset Modal */}
+                    {showPasswordModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                            <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#5a4a3e] rounded-xl p-6 w-full max-w-md text-[#F5F5DC] shadow-2xl">
+                                <div className="flex justify-between items-center pb-3 border-b border-[#483C32] mb-4">
+                                    <h4 className="font-bold text-lg">Email OTP Password Change</h4>
+                                    <button onClick={() => setShowPasswordModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                                </div>
+
+                                {otpStep === 1 && (
+                                    <div className="space-y-4 text-center">
+                                        <p className="text-sm text-[#F5F5DC]/80">
+                                            We will send a 6-digit OTP code to: <strong>{profileData.email || user?.email}</strong>
+                                        </p>
+                                        <button
+                                            onClick={handleSendOTP}
+                                            disabled={otpLoading}
+                                            className="w-full bg-[#a38b82] hover:bg-[#967969] text-white py-2 rounded font-semibold text-sm transition duration-300"
+                                        >
+                                            {otpLoading ? 'Sending Code...' : 'Send Verification OTP'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {otpStep === 2 && (
+                                    <div className="space-y-4">
+                                        {debugOtpBanner && (
+                                            <div className="bg-amber-500/20 border border-amber-500/40 text-amber-200 p-2 rounded text-xs text-center font-mono">
+                                                🔑 Dev OTP Code: <strong>{debugOtpBanner}</strong>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-[#F5F5DC]/80 text-center">Enter the 6-digit code received in email:</p>
+                                        <input
+                                            type="text"
+                                            value={otpCode}
+                                            onChange={(e) => setOtpCode(e.target.value)}
+                                            placeholder="123456"
+                                            maxLength={6}
+                                            className="w-full text-center font-mono text-xl tracking-widest bg-[#212121] border border-[#483C32] p-2 rounded text-[#F5F5DC]"
+                                        />
+                                        <button
+                                            onClick={handleVerifyOTP}
+                                            disabled={otpLoading}
+                                            className="w-full bg-[#a38b82] hover:bg-[#967969] text-white py-2 rounded font-semibold text-sm transition duration-300"
+                                        >
+                                            {otpLoading ? 'Verifying...' : 'Verify OTP'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {otpStep === 3 && (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="text-xs font-semibold block mb-1">New Password (min 6 chars)</label>
+                                            <input
+                                                type="password"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                placeholder="••••••••"
+                                                className="w-full bg-[#212121] border border-[#483C32] p-2 rounded text-sm text-[#F5F5DC]"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold block mb-1">Confirm New Password</label>
+                                            <input
+                                                type="password"
+                                                value={confirmPassword}
+                                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                                placeholder="••••••••"
+                                                className="w-full bg-[#212121] border border-[#483C32] p-2 rounded text-sm text-[#F5F5DC]"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleChangePassword}
+                                            disabled={otpLoading}
+                                            className="w-full bg-[#a38b82] hover:bg-[#967969] text-white py-2 rounded font-semibold text-sm transition duration-300 mt-2"
+                                        >
+                                            {otpLoading ? 'Updating Password...' : 'Save New Password'}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delete Account Modal */}
+                    {showDeleteModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+                            <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-red-700/50 rounded-xl p-6 w-full max-w-md text-[#F5F5DC] shadow-2xl">
+                                <div className="flex justify-between items-center pb-3 border-b border-[#483C32] mb-4">
+                                    <h4 className="font-bold text-lg text-red-400">Confirm Account Deletion</h4>
+                                    <button onClick={() => setShowDeleteModal(false)} className="text-gray-400 hover:text-white text-xl">✕</button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <p className="text-xs text-red-200 bg-red-950/40 border border-red-800/40 p-3 rounded">
+                                        ⚠️ <strong>Warning:</strong> Deleting your account will permanently wipe your profile, team athletes, and performance metrics from the database.
+                                    </p>
+
+                                    <div>
+                                        <label className="text-xs text-[#F5F5DC]/80 block mb-1">
+                                            Type <strong className="text-red-400">DELETE MY ACCOUNT</strong> to confirm:
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={deleteConfirmationInput}
+                                            onChange={(e) => setDeleteConfirmationInput(e.target.value)}
+                                            placeholder="DELETE MY ACCOUNT"
+                                            className="w-full font-mono text-sm bg-[#212121] border border-red-600/50 p-2 rounded text-[#F5F5DC]"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3 pt-2">
+                                        <button
+                                            onClick={() => setShowDeleteModal(false)}
+                                            className="px-4 py-2 bg-[#483C32] hover:bg-[#5a4a3e] rounded text-xs font-semibold"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            onClick={handleDeleteAccountConfirm}
+                                            disabled={deleteConfirmationInput !== 'DELETE MY ACCOUNT' || deleteLoading}
+                                            className="px-4 py-2 bg-red-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-xs font-semibold text-white"
+                                        >
+                                            {deleteLoading ? 'Deleting...' : 'Delete Permanently'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
     );

@@ -4,12 +4,16 @@ const coachSchema = mongoose.Schema(
     {
         name: {
             type: String,
-            required: true
+            required: true,
+            trim: true
         },
         email: {
             type: String,
             required: true,
-            unique: true
+            unique: true,
+            lowercase: true,
+            trim: true,
+            index: true
         },
         password: {
             type: String,
@@ -18,10 +22,9 @@ const coachSchema = mongoose.Schema(
         },
         sport: {
             type: String,
-            enum: ['Football', 'Cricket', 'Volleyball', 'Handball', 'Rugby'],
+            enum: ['Football', 'Cricket', 'Volleyball', 'Basketball', 'Handball', 'Rugby', 'Chess', 'Table Tennis', 'Badminton'],
             default: 'Football'
         },
-        // Profile section fields (optional, filled during profile setup)
         title: {
             type: String,
             default: ""
@@ -42,7 +45,6 @@ const coachSchema = mongoose.Schema(
             type: String,
             default: ""
         },
-        // Stats section fields (optional)
         teamsCoached: {
             type: String,
             default: ""
@@ -59,7 +61,6 @@ const coachSchema = mongoose.Schema(
             type: String,
             default: ""
         },
-        // Contacts section fields (optional)
         events: [{
             title: String,
             date: String,
@@ -91,14 +92,14 @@ const coachSchema = mongoose.Schema(
                 default: ""
             }
         },
-        // User management fields
         isNewUser: {
             type: Boolean,
             default: true
         },
         isActive: {
             type: Boolean,
-            default: true
+            default: true,
+            index: true
         },
         lastLogin: {
             type: Date,
@@ -111,9 +112,17 @@ const coachSchema = mongoose.Schema(
             },
             ipAddress: String,
             userAgent: String
-        }]
+        }],
+        passwordResetOTP: {
+            code: String,
+            expiresAt: Date,
+            isVerified: Boolean
+        }
     },
     { timestamps: true }
 );
+
+// Compound index for active status and email search
+coachSchema.index({ email: 1, isActive: 1 });
 
 module.exports = mongoose.model('Coach', coachSchema);

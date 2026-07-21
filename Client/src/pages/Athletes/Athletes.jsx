@@ -17,37 +17,41 @@ export default function Athletes() {
     const [sortOrder, setSortOrder] = useState('asc');
 
     // Use athletes from context
-    const { athletes, addAthlete, removeAthlete, sportPositions } = useAthletes();
+    const { athletes = [], addAthlete, removeAthlete, sportPositions = [] } = useAthletes() || {};
+
+    const safePositions = sportPositions || [];
 
     const [newAthlete, setNewAthlete] = useState({
         name: '',
-        position: sportPositions[0] || 'Forward',
+        position: safePositions[0] || 'Forward',
         speed: 5,
         strength: 5,
         stamina: 5
     });
 
-    const filterPositions = ["All Positions", ...sportPositions];
+    const filterPositions = ["All Positions", ...safePositions];
 
     // Calculate average score for an athlete
     const calculateAverageScore = (athlete) => {
-        return Math.round((athlete.speed + athlete.strength + athlete.stamina) / 3);
+        if (!athlete) return 0;
+        return Math.round(((athlete.speed || 0) + (athlete.strength || 0) + (athlete.stamina || 0)) / 3);
     };
 
     // Filter and sort athletes
     const filteredAndSortedAthletes = () => {
-        let filtered = athletes;
+        let filtered = [...(athletes || [])];
 
         // Filter by position
         if (selectedPosition !== 'All Positions') {
             filtered = filtered.filter(athlete => athlete.position === selectedPosition);
         }
 
-        // Filter by search query
-        if (athleteSearchQuery) {
+        // Filter by search query (combining global search and athlete search)
+        const effectiveSearch = (globalSearchQuery || athleteSearchQuery).toLowerCase().trim();
+        if (effectiveSearch) {
             filtered = filtered.filter(athlete =>
-                athlete.name.toLowerCase().includes(athleteSearchQuery.toLowerCase()) ||
-                athlete.position.toLowerCase().includes(athleteSearchQuery.toLowerCase())
+                athlete.name.toLowerCase().includes(effectiveSearch) ||
+                athlete.position.toLowerCase().includes(effectiveSearch)
             );
         }
 
@@ -321,7 +325,7 @@ export default function Athletes() {
                                         onChange={(e) => setNewAthlete({...newAthlete, position: e.target.value})}
                                         className="w-full px-3 py-2 bg-[#483C32] text-[#F5F5DC] rounded-lg border border-[#5a4a3e] focus:outline-none focus:border-[#F5F5DC]"
                                     >
-                                        {sportPositions.map(pos => (
+                                        {safePositions.map(pos => (
                                             <option key={pos} value={pos}>{pos}</option>
                                         ))}
                                     </select>
