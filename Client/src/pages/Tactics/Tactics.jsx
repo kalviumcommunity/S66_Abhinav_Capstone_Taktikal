@@ -1,841 +1,570 @@
-import React, { useState, useRef, useEffect } from "react";
-import tacticsIcon from "../../assets/tactics@1x copy.svg";
-import footballField from "../../assets/Football field@1x.png";
-import cricketField from "../../assets/cricket_field.png";
-import volleyballCourt from "../../assets/volleyball_court.png";
-import handballCourt from "../../assets/handball_court.png";
-import rugbyPitch from "../../assets/rugby_pitch.png";
-import calendarIcon from "../../assets/calendar@1x.svg";
-import searchIcon from "../../assets/search@1x.svg";
-import notificationIcon from "../../assets/notification@1x.svg";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
+import {
+    Search, Bell, Plus, Check, Trash2, Shield, Target,
+    Activity, Sliders, CheckCircle2, Flame, Award, ChevronRight, Layers, X
+} from "lucide-react";
+
+/* ─── Default Training Checklist by Sport ─────────────────────────────── */
+const DEFAULT_SPORT_ACTIVITIES = {
+    Football: [
+        { id: 1, text: "High-Pressing Rondo 5v2 (20 mins)", checked: true, category: "Tactical" },
+        { id: 2, text: "Corner Kick Far-Post Outswingers", checked: true, category: "Set Pieces" },
+        { id: 3, text: "Counter-Attack Transition Sprint (15 mins)", checked: false, category: "Conditioning" },
+        { id: 4, text: "Post-Session Hydrotherapy & Foam Rolling", checked: false, category: "Recovery" }
+    ],
+    Cricket: [
+        { id: 5, text: "Net Batting against Off-Spin & Pace", checked: true, category: "Tactical" },
+        { id: 6, text: "Slip Catching & High-Flyer Drills", checked: false, category: "Fielding" },
+        { id: 7, text: "Death-Overs Yorkbowling Scenarios", checked: true, category: "Bowling" },
+        { id: 8, text: "Match Simulation & Target Chasing", checked: false, category: "Strategy" }
+    ],
+    Rugby: [
+        { id: 9, text: "Scrum Engagement & Ruck Clearing", checked: true, category: "Physical" },
+        { id: 10, text: "Backline Passing & Blindside Overloads", checked: true, category: "Tactical" },
+        { id: 11, text: "Lineout Catch & Drive Drills", checked: false, category: "Set Pieces" },
+        { id: 12, text: "Tackle Breakdown & Jackal Practice", checked: false, category: "Defense" }
+    ],
+    Basketball: [
+        { id: 13, text: "Pick & Roll Defensive Coverage", checked: true, category: "Tactical" },
+        { id: 14, text: "3-Point Spot Shooting & Transition Threes", checked: false, category: "Offense" },
+        { id: 15, text: "Full-Court Press Breakout Scenarios", checked: true, category: "Conditioning" }
+    ],
+    Volleyball: [
+        { id: 16, text: "Overhead Setting & Middle-Block Spikes", checked: true, category: "Attack" },
+        { id: 17, text: "5-1 Rotation Serve-Receive Drills", checked: false, category: "Tactical" },
+        { id: 18, text: "Dig & Transition Counter-Attacks", checked: false, category: "Defense" }
+    ]
+};
+
+/* ─── Sport-Specific Preset Strategies ───────────────────────────────── */
+const SPORT_PRESET_TACTICS = {
+    Football: [
+        { id: "f1", name: "High-Pressing 4-3-3", phase: "Offensive Press", focus: "Possession & Wing Overload", intensity: "High" },
+        { id: "f2", name: "Low-Block Counter 4-4-2", phase: "Defensive Shape", focus: "Compactness & Quick Sprints", intensity: "Medium" }
+    ],
+    Cricket: [
+        { id: "c1", name: "Aggressive Powerplay Field", phase: "First 6 Overs", focus: "Slip Catcher & Full Length", intensity: "High" },
+        { id: "c2", name: "Death Overs Wide-Yorker Plan", phase: "Overs 16-20", focus: "Boundary Protection", intensity: "High" }
+    ],
+    Rugby: [
+        { id: "r1", name: "Standard 15s Phase Play", phase: "Attacking 22m", focus: "Heavy Ruck & Forward Carry", intensity: "High" },
+        { id: "r2", name: "Blindside Wing Overload", phase: "Set Piece Lineout", focus: "Fast Backline Pass", intensity: "Medium" }
+    ],
+    Basketball: [
+        { id: "b1", name: "2-3 Zone Trap Defense", phase: "Defensive Rotation", focus: "Wing Traps & Paint Lock", intensity: "High" },
+        { id: "b2", name: "Picks & Pop Motion Offense", phase: "Half-Court Sets", focus: "Spacer Threes", intensity: "Medium" }
+    ],
+    Volleyball: [
+        { id: "v1", name: "5-1 Rotation Offense", phase: "Serve Receive", focus: "Setter Acceleration", intensity: "High" }
+    ]
+};
 
 export default function Tactics() {
-    // Formation state
-    // Hook up auth & contexts
     const { user } = useAuth();
     const sportName = user?.sport || "Football";
+    // Scope storage per-user so tactics/checklists don't leak across accounts on a shared browser.
+    const userKey = user?.id || "guest";
 
-    const sportConfig = {
-        "Football": {
-            formations: {
-                "4-3-3": [
-                    { x: 0.48, y: 0.95, position: "GK" },
-                    { x: 0.25, y: 0.78, position: "LB" },
-                    { x: 0.4, y: 0.78, position: "CB" },
-                    { x: 0.6, y: 0.78, position: "CB" },
-                    { x: 0.75, y: 0.78, position: "RB" },
-                    { x: 0.3, y: 0.5, position: "CM" },
-                    { x: 0.5, y: 0.5, position: "CM" },
-                    { x: 0.7, y: 0.5, position: "CM" },
-                    { x: 0.3, y: 0.15, position: "LW" },
-                    { x: 0.5, y: 0.10, position: "ST" },
-                    { x: 0.7, y: 0.15, position: "RW" }
-                ],
-                "4-4-2": [
-                    { x: 0.48, y: 0.95, position: "GK" },
-                    { x: 0.25, y: 0.78, position: "LB" },
-                    { x: 0.4, y: 0.78, position: "CB" },
-                    { x: 0.6, y: 0.78, position: "CB" },
-                    { x: 0.75, y: 0.78, position: "RB" },
-                    { x: 0.25, y: 0.45, position: "LM" },
-                    { x: 0.4, y: 0.45, position: "CM" },
-                    { x: 0.6, y: 0.45, position: "CM" },
-                    { x: 0.75, y: 0.45, position: "RM" },
-                    { x: 0.4, y: 0.15, position: "ST" },
-                    { x: 0.6, y: 0.15, position: "ST" }
-                ]
-            },
-            bgImage: `url("${footballField}")`,
-            bgColor: "#8FBC8F",
-            bgSize: "contain",
-            bgShape: "none",
-            borderRadius: "0%"
-        },
-        "Cricket": {
-             formations: {
-                "Aggressive Base": [
-                    {x:0.48, y:0.8, position:"WK"}, {x:0.48, y:0.2, position:"BOWL"}, 
-                    {x:0.42, y:0.7, position:"SLIP1"}, {x:0.38,y:0.7, position:"SLIP2"},
-                    {x:0.3, y:0.6, position:"GULLY"}, {x:0.25, y:0.4, position:"POINT"},
-                    {x:0.3, y:0.2, position:"COVER"}, {x:0.55, y:0.15, position:"MIDON"},
-                    {x:0.7, y:0.25, position:"MIDOFF"}, {x:0.75, y:0.4, position:"SQUARE"},
-                    {x:0.7, y:0.6, position:"FINE"}
-                ],
-                "Defensive Base": [
-                    {x:0.48, y:0.8, position:"WK"}, {x:0.48, y:0.2, position:"BOWL"}, 
-                    {x:0.42, y:0.85, position:"SLIP1"}, {x:0.2, y:0.5, position:"POINT"},
-                    {x:0.25, y:0.2, position:"COVER"}, {x:0.35, y:0.1, position:"EX-CVR"},
-                    {x:0.6, y:0.1, position:"LONGON"}, {x:0.75, y:0.2, position:"MDWKT"},
-                    {x:0.8, y:0.45, position:"SQUARE"}, {x:0.75, y:0.7, position:"FINE"},
-                    {x:0.65, y:0.85, position:"3RDM"}
-                ]
-            },
-            bgImage: `url("${cricketField}")`,
-            bgColor: "#DEE5DE",
-            bgSize: "contain",
-            bgShape: "none",
-            borderRadius: "0%"
-        },
-        "Volleyball": {
-            formations: {
-                "5-1 System": [
-                    {x:0.48, y:0.75, position:"S"}, {x:0.35, y:0.75, position:"L"}, {x:0.6, y:0.75, position:"MB"},
-                    {x:0.35, y:0.25, position:"OH"}, {x:0.48, y:0.25, position:"MB"}, {x:0.6, y:0.25, position:"OPP"}
-                ],
-                "6-2 System": [
-                    {x:0.48, y:0.75, position:"S/O"}, {x:0.35, y:0.75, position:"L"}, {x:0.6, y:0.75, position:"MB"},
-                    {x:0.35, y:0.25, position:"OH"}, {x:0.48, y:0.25, position:"MB"}, {x:0.6, y:0.25, position:"S/O"}
-                ]
-            },
-            bgImage: `url("${volleyballCourt}")`,
-            bgColor: "#DEE5DE",
-            bgSize: "contain",
-            bgShape: "none",
-            borderRadius: "0%"
-        },
-        "Handball": {
-            formations: {
-                "6-0 Defense": [
-                    {x:0.48,y:0.85,position:"GK"}, {x:0.3,y:0.65,position:"LW"}, {x:0.4,y:0.55,position:"LB"},
-                    {x:0.48,y:0.5,position:"CB"}, {x:0.56,y:0.55,position:"RB"}, {x:0.66,y:0.65,position:"RW"}, {x:0.48,y:0.4,position:"PVT"}
-                ]
-            },
-            bgImage: `url("${handballCourt}")`,
-            bgColor: "#DEE5DE",
-            bgSize: "contain",
-            bgShape: "none",
-            borderRadius: "0%"
-        },
-        "Rugby": {
-            formations: {
-                "Standard 15s": [
-                    {x:0.38,y:0.85,position:"PRP"}, {x:0.48,y:0.85,position:"HKR"}, {x:0.58,y:0.85,position:"PRP"},
-                    {x:0.43,y:0.75,position:"LCK"}, {x:0.53,y:0.75,position:"LCK"}, {x:0.35,y:0.65,position:"FLK"},
-                    {x:0.61,y:0.65,position:"FLK"}, {x:0.48,y:0.55,position:"8M"}, {x:0.48,y:0.45,position:"SH"}, 
-                    {x:0.35,y:0.35,position:"FH"}, {x:0.61,y:0.35,position:"IC"}, {x:0.7,y:0.35,position:"OC"},
-                    {x:0.28,y:0.25,position:"WG"}, {x:0.68,y:0.25,position:"WG"}, {x:0.48,y:0.15,position:"FB"}
-                ]
-            },
-            bgImage: `url("${rugbyPitch}")`,
-            bgColor: "#DEE5DE",
-            bgSize: "contain",
-            bgShape: "none",
-            borderRadius: "0%"
-        },
-        "Basketball": {
-            formations: {
-                "2-3 Zone Defense": [
-                    { x: 0.35, y: 0.70, position: "PG" },
-                    { x: 0.65, y: 0.70, position: "SG" },
-                    { x: 0.25, y: 0.35, position: "SF" },
-                    { x: 0.50, y: 0.25, position: "C" },
-                    { x: 0.75, y: 0.35, position: "PF" }
-                ],
-                "Picks & Roll Offense": [
-                    { x: 0.50, y: 0.80, position: "PG" },
-                    { x: 0.30, y: 0.60, position: "SG" },
-                    { x: 0.50, y: 0.50, position: "C" },
-                    { x: 0.75, y: 0.55, position: "SF" },
-                    { x: 0.20, y: 0.30, position: "PF" }
-                ]
-            },
-            bgImage: `linear-gradient(to bottom, #d97706, #92400e)`,
-            bgColor: "#92400e",
-            bgSize: "cover",
-            bgShape: "none",
-            borderRadius: "4px"
-        },
-        "Chess": {
-            formations: {
-                "Sicilian Defense Setup": [
-                    { x: 0.50, y: 0.85, position: "GM-C" },
-                    { x: 0.35, y: 0.65, position: "OPENING" },
-                    { x: 0.65, y: 0.65, position: "TACTICS" },
-                    { x: 0.30, y: 0.40, position: "BLITZ" },
-                    { x: 0.70, y: 0.30, position: "ENDGAME" }
-                ],
-                "King's Indian Attack": [
-                    { x: 0.50, y: 0.85, position: "GM-C" },
-                    { x: 0.45, y: 0.60, position: "OPENING" },
-                    { x: 0.55, y: 0.50, position: "TACTICS" },
-                    { x: 0.25, y: 0.35, position: "BLITZ" },
-                    { x: 0.75, y: 0.25, position: "ENDGAME" }
-                ]
-            },
-            bgImage: `linear-gradient(45deg, #1f2937 25%, #374151 25%, #374151 50%, #1f2937 50%, #1f2937 75%, #374151 75%, #374151 100%)`,
-            bgColor: "#1f2937",
-            bgSize: "40px 40px",
-            bgShape: "none",
-            borderRadius: "4px"
-        },
-        "Table Tennis": {
-            formations: {
-                "Aggressive Counter-Loop": [
-                    { x: 0.50, y: 0.80, position: "ATTACK" },
-                    { x: 0.30, y: 0.70, position: "SERVE" },
-                    { x: 0.70, y: 0.60, position: "CHOP" },
-                    { x: 0.50, y: 0.30, position: "DBL" }
-                ],
-                "Defensive Chop Block": [
-                    { x: 0.50, y: 0.85, position: "CHOP" },
-                    { x: 0.25, y: 0.65, position: "SERVE" },
-                    { x: 0.75, y: 0.65, position: "ATTACK" },
-                    { x: 0.50, y: 0.25, position: "DBL" }
-                ]
-            },
-            bgImage: `linear-gradient(to bottom, #1e3a8a, #1d4ed8)`,
-            bgColor: "#1e3a8a",
-            bgSize: "cover",
-            bgShape: "none",
-            borderRadius: "4px"
-        },
-        "Badminton": {
-            formations: {
-                "Front-Back Attack": [
-                    { x: 0.50, y: 0.35, position: "NET" },
-                    { x: 0.50, y: 0.80, position: "SMASH" },
-                    { x: 0.30, y: 0.60, position: "SINGLES" },
-                    { x: 0.70, y: 0.60, position: "DOUBLES" }
-                ],
-                "Side-by-Side Defense": [
-                    { x: 0.35, y: 0.70, position: "DEF-L" },
-                    { x: 0.65, y: 0.70, position: "DEF-R" },
-                    { x: 0.50, y: 0.40, position: "NET" },
-                    { x: 0.50, y: 0.85, position: "REAR" }
-                ]
-            },
-            bgImage: `linear-gradient(to bottom, #047857, #065f46)`,
-            bgColor: "#047857",
-            bgSize: "cover",
-            bgShape: "none",
-            borderRadius: "4px"
-        }
-    };
+    // ── Navigation & Active View ──
+    const [activeTab, setActiveTab] = useState("creator"); // "creator" | "tracker" | "playbook"
 
-    const currentSportConfig = sportConfig[sportName] || sportConfig["Football"];
-    const baseFormations = Object.keys(currentSportConfig.formations);
-
-    // Initial state setup depends on sport configuration
-    const [formation, setFormation] = useState(baseFormations[0]);
-    const [customMode, setCustomMode] = useState(false);
-
-    const [savedFormations, setSavedFormations] = useState(() => {
-        if (user && user.tactics_saved_formations) return user.tactics_saved_formations;
-        const local = localStorage.getItem('tactics_saved_formations');
-        return local ? JSON.parse(local) : [];
-    });
-    const [customFormationName, setCustomFormationName] = useState("");
-
-    useEffect(() => {
-        localStorage.setItem('tactics_saved_formations', JSON.stringify(savedFormations));
-    }, [savedFormations]);
-
-    // Sport-specific activity defaults
-    const getSportActivities = (s) => {
-        switch (s) {
-            case "Cricket":
-                return [
-                    { text: "Net batting & bowling session", checked: true },
-                    { text: "Slip catching & fielding drills", checked: false },
-                    { text: "Run-rate scenario practice", checked: false }
-                ];
-            case "Volleyball":
-                return [
-                    { text: "Overhead set & spike drills", checked: true },
-                    { text: "5-1 rotation transition", checked: false },
-                    { text: "Block & dig reaction training", checked: false }
-                ];
-            case "Basketball":
-                return [
-                    { text: "Free-throw & 3-point shooting", checked: true },
-                    { text: "Pick-and-roll execution", checked: false },
-                    { text: "Full-court defensive press", checked: false }
-                ];
-            case "Chess":
-                return [
-                    { text: "Opening line study & prep", checked: true },
-                    { text: "Daily tactical puzzle solving (30m)", checked: false },
-                    { text: "Rook & endgame technique practice", checked: false }
-                ];
-            case "Table Tennis":
-                return [
-                    { text: "Serve spin & placement variation", checked: true },
-                    { text: "Third-ball attack & counter-looping", checked: false },
-                    { text: "Multi-ball speed drills", checked: false }
-                ];
-            case "Badminton":
-                return [
-                    { text: "Smash & steep angle drop shots", checked: true },
-                    { text: "Net kill & shadow footwork", checked: false },
-                    { text: "Doubles rotation & defense", checked: false }
-                ];
-            case "Handball":
-                return [
-                    { text: "Fast break & wing finishing", checked: true },
-                    { text: "6-0 wall defense drills", checked: false },
-                    { text: "7m penalty shot practice", checked: false }
-                ];
-            case "Rugby":
-                return [
-                    { text: "Scrum & lineout set-piece drills", checked: true },
-                    { text: "Ruck clearing & tackle technique", checked: false },
-                    { text: "Backline passing movement", checked: false }
-                ];
-            case "Football":
-            default:
-                return [
-                    { text: "Pass-and-move warm-up", checked: true },
-                    { text: "Tactical positioning & shape", checked: false },
-                    { text: "Set-piece & penalty practice", checked: false }
-                ];
-        }
-    };
-
-    // Checklist state
-    const [activities, setActivities] = useState(() => {
-        if (user && user.tactics_checklist && user.tactics_checklist.length > 0) return user.tactics_checklist;
-        const saved = localStorage.getItem(`tactics_checklist_${sportName}`);
-        if (saved) return JSON.parse(saved);
-        return getSportActivities(sportName);
+    // ── Saved Tactics State ──
+    const [tacticsList, setTacticsList] = useState(() => {
+        const saved = localStorage.getItem(`tactics_list_${userKey}_${sportName}`);
+        return saved ? JSON.parse(saved) : (SPORT_PRESET_TACTICS[sportName] || SPORT_PRESET_TACTICS.Football);
     });
 
+    const [selectedTacticId, setSelectedTacticId] = useState(() => tacticsList[0]?.id || "");
+
+    // ── New Tactic Form State ──
+    const [newTactic, setNewTactic] = useState({
+        name: "",
+        phase: "General Strategy",
+        focus: "",
+        intensity: "High",
+        notes: ""
+    });
+    const [showNewTacticModal, setShowNewTacticModal] = useState(false);
+
+    // ── Training Checklist State ──
+    const [checklist, setChecklist] = useState(() => {
+        const saved = localStorage.getItem(`checklist_${userKey}_${sportName}`);
+        return saved ? JSON.parse(saved) : (DEFAULT_SPORT_ACTIVITIES[sportName] || DEFAULT_SPORT_ACTIVITIES.Football);
+    });
+    const [newActivityText, setNewActivityText] = useState("");
+    const [newActivityCategory, setNewActivityCategory] = useState("Tactical");
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("All");
+
+    // ── Search State ──
+    const [searchQuery, setSearchQuery] = useState("");
+
+    // ── Save checklist & tactics to local storage ──
     useEffect(() => {
-        setActivities(getSportActivities(sportName));
-    }, [sportName]);
+        localStorage.setItem(`tactics_list_${userKey}_${sportName}`, JSON.stringify(tacticsList));
+    }, [tacticsList, userKey, sportName]);
 
     useEffect(() => {
-        localStorage.setItem(`tactics_checklist_${sportName}`, JSON.stringify(activities));
-    }, [activities, sportName]);
-    const [newActivity, setNewActivity] = useState("");
+        localStorage.setItem(`checklist_${userKey}_${sportName}`, JSON.stringify(checklist));
+    }, [checklist, userKey, sportName]);
 
-    // Search state
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState([]);
-    const [showResults, setShowResults] = useState(false);
+    // ── Handlers for Tactics ──
+    const handleCreateTactic = (e) => {
+        e.preventDefault();
+        if (!newTactic.name.trim()) return;
 
-    // Search data dynamically tailored per sport
-    const searchData = [
-        { id: 1, title: `${baseFormations[0]} Strategy`, type: 'formation' },
-        { id: 2, title: `${baseFormations[1] || baseFormations[0]} Setup`, type: 'formation' },
-        { id: 3, title: 'Custom Formation', type: 'formation' },
-        ...activities.map((a, idx) => ({ id: idx + 4, title: a.text, type: 'training' }))
-    ];
+        const created = {
+            id: Date.now().toString(),
+            name: newTactic.name,
+            phase: newTactic.phase || "General Strategy",
+            focus: newTactic.focus || "Tactical Objective",
+            intensity: newTactic.intensity || "High",
+            notes: newTactic.notes || ""
+        };
 
-    // Format initial player positions depending on configuration array
-    const getFormationPositions = (formQuery) => {
-        const positions = currentSportConfig.formations[formQuery] || currentSportConfig.formations[baseFormations[0]];
-
-        return positions.map((pos, i) => ({
-            id: i,
-            x: pos.x, // Store as fraction (0-1)
-            y: pos.y, // Store as fraction (0-1)
-            position: pos.position
-        }));
+        const updated = [created, ...tacticsList];
+        setTacticsList(updated);
+        setSelectedTacticId(created.id);
+        setNewTactic({ name: "", phase: "General Strategy", focus: "", intensity: "High", notes: "" });
+        setShowNewTacticModal(false);
     };
 
-    // Player positions (relative to pitch container)
-    const [players, setPlayers] = useState(() => getFormationPositions(formation));
-
-    const pitchRef = useRef(null);
-    const draggingPlayer = useRef(null);
-
-    // Function to determine player position based on coordinates
-    const getPlayerPosition = (x, y, containerWidth = 800, containerHeight = 730, sport = "Football") => {
-        const xPercent = (x / containerWidth) * 100;
-        const yPercent = (y / containerHeight) * 100;
-
-        if (sport === "Volleyball") {
-            if (yPercent < 40) {
-                if (xPercent < 45) return "OH";
-                if (xPercent > 55) return "OPP";
-                return "MB";
-            } else if (yPercent < 70) {
-                if (xPercent < 40) return "S";
-                if (xPercent > 60) return "S";
-                return "MB";
-            } else {
-                if (xPercent < 40) return "L";
-                if (xPercent > 60) return "L";
-                return "S/O";
-            }
-        }
-
-        if (sport === "Handball") {
-            if (yPercent < 45) {
-                if (xPercent < 35) return "LW";
-                if (xPercent > 65) return "RW";
-                return "PVT";
-            } else if (yPercent < 75) {
-                if (xPercent < 40) return "LB";
-                if (xPercent > 60) return "RB";
-                return "CB";
-            } else {
-                return "GK";
-            }
-        }
-
-        if (sport === "Rugby") {
-            if (yPercent < 30) {
-                if (xPercent < 30) return "WG";
-                if (xPercent > 70) return "WG";
-                return "FB";
-            } else if (yPercent < 55) {
-                if (xPercent < 45) return "FH";
-                if (xPercent > 55) return "OC";
-                return "IC";
-            } else if (yPercent < 75) {
-                if (xPercent < 35) return "FLK";
-                if (xPercent > 65) return "FLK";
-                return "SH";
-            } else {
-                if (xPercent < 40) return "PRP";
-                if (xPercent > 60) return "PRP";
-                return "HKR";
-            }
-        }
-
-        if (sport === "Cricket") {
-            if (yPercent < 35) {
-                if (xPercent < 45) return "COVER";
-                if (xPercent > 55) return "MIDON";
-                return "BOWL";
-            } else if (yPercent < 60) {
-                if (xPercent < 35) return "POINT";
-                if (xPercent > 65) return "SQUARE";
-                return "MIDOFF";
-            } else {
-                if (xPercent < 45) return "SLIP";
-                if (xPercent > 55) return "FINE";
-                if (yPercent > 85) return "WK";
-                return "GULLY";
-            }
-        }
-
-        if (sport === "Basketball") {
-            if (yPercent < 40) {
-                if (xPercent < 35) return "SF";
-                if (xPercent > 65) return "PF";
-                return "C";
-            } else if (yPercent < 70) {
-                if (xPercent < 45) return "PG";
-                return "SG";
-            } else {
-                return "PG";
-            }
-        }
-
-        if (sport === "Chess") {
-            if (yPercent < 40) return "ENDGAME";
-            if (yPercent < 70) {
-                if (xPercent < 50) return "BLITZ";
-                return "TACTICS";
-            }
-            if (xPercent < 50) return "OPENING";
-            return "GM-C";
-        }
-
-        if (sport === "Table Tennis") {
-            if (yPercent < 50) return "DBL";
-            if (xPercent < 40) return "SERVE";
-            if (xPercent > 60) return "CHOP";
-            return "ATTACK";
-        }
-
-        if (sport === "Badminton") {
-            if (yPercent < 45) return "NET";
-            if (yPercent < 75) {
-                if (xPercent < 50) return "SINGLES";
-                return "DOUBLES";
-            }
-            return "SMASH";
-        }
-
-        // Default Football field zones
-        if (yPercent < 20) {
-            if (xPercent < 25) return "LW";
-            if (xPercent > 75) return "RW";
-            return "ST";
-        } else if (yPercent < 40) {
-            if (xPercent < 30) return "LM";
-            if (xPercent > 70) return "RM";
-            return "AMF";
-        } else if (yPercent < 60) {
-            if (xPercent < 30) return "LM";
-            if (xPercent > 70) return "RM";
-            return "CM";
-        } else if (yPercent < 80) {
-            if (xPercent < 30) return "LB";
-            if (xPercent > 70) return "RB";
-            return "DMF";
-        } else {
-            if (yPercent > 90 && xPercent > 40 && xPercent < 60) return "GK";
-            if (xPercent < 25) return "LB";
-            if (xPercent > 75) return "RB";
-            return "CB";
+    const handleDeleteTactic = (id) => {
+        const updated = tacticsList.filter(t => t.id !== id);
+        setTacticsList(updated);
+        if (selectedTacticId === id && updated.length > 0) {
+            setSelectedTacticId(updated[0].id);
         }
     };
 
-    // Check if coordinates are within the football field image (not just the green background)
-    const isWithinFieldImage = (x, y, containerWidth, containerHeight) => {
-        // Assuming the image takes up about 80% of the container (due to backgroundSize: contain)
-        const imageMargin = 0.1; // 10% margin on each side
-        const imageLeft = containerWidth * imageMargin;
-        const imageRight = containerWidth * (1 - imageMargin);
-        const imageTop = containerHeight * imageMargin;
-        const imageBottom = containerHeight * (1 - imageMargin);
-
-        return x >= imageLeft && x <= imageRight && y >= imageTop && y <= imageBottom;
+    // ── Handlers for Checklist ──
+    const handleAddActivity = () => {
+        if (!newActivityText.trim()) return;
+        const newItem = {
+            id: Date.now(),
+            text: newActivityText.trim(),
+            checked: false,
+            category: newActivityCategory || "Tactical"
+        };
+        setChecklist(prev => [...prev, newItem]);
+        setNewActivityText("");
     };
 
-    const handleMouseDown = (e, id) => {
-        if (!customMode) return; // Only allow dragging in custom mode
-        draggingPlayer.current = id;
+    const handleToggleActivity = (id) => {
+        setChecklist(checklist.map(item => item.id === id ? { ...item, checked: !item.checked } : item));
     };
 
-    const handleMouseMove = (e) => {
-        if (draggingPlayer.current === null || !customMode) return;
-        const rect = pitchRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        // Only allow movement within the field image bounds
-        if (!isWithinFieldImage(x, y, rect.width, rect.height)) return;
-
-        const newX = Math.max(0, Math.min(x, rect.width - 30));
-        const newY = Math.max(0, Math.min(y, rect.height - 30));
-        
-        // Store as fractions for responsiveness
-        const xFraction = newX / rect.width;
-        const yFraction = newY / rect.height;
-        const newPosition = getPlayerPosition(newX, newY, rect.width, rect.height, sportName);
-
-        setPlayers((prev) =>
-            prev.map((p) =>
-                p.id === draggingPlayer.current
-                    ? { ...p, x: xFraction, y: yFraction, position: newPosition }
-                    : p
-            )
-        );
+    const handleDeleteActivity = (id) => {
+        setChecklist(checklist.filter(item => item.id !== id));
     };
 
-    const handleMouseUp = () => {
-        draggingPlayer.current = null;
-    };
+    // Calculate completion percentage
+    const completedCount = checklist.filter(item => item.checked).length;
+    const totalCount     = checklist.length;
+    const progressPct    = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-    // Formation change handler
-    const changeFormation = (newFormation) => {
-        setFormation(newFormation);
-        setCustomMode(false); // Exit custom mode when changing formation
+    const filteredChecklist = checklist.filter(item => {
+        if (selectedCategoryFilter !== "All" && item.category !== selectedCategoryFilter) return false;
+        if (searchQuery && !item.text.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        return true;
+    });
 
-        const savedMatch = savedFormations.find(f => f.name === newFormation);
-        if (savedMatch) {
-            setPlayers(savedMatch.players);
-            return;
-        }
-
-        setPlayers(getFormationPositions(newFormation));
-    };
-
-    // Custom formation handler
-    const enableCustomMode = () => {
-        setCustomMode(true);
-        setFormation("Custom");
-    };
-
-    const handleSaveCustomFormation = () => {
-        const nameToSave = customFormationName.trim() || `Custom ${savedFormations.length + 1}`;
-        const existingIndex = savedFormations.findIndex(f => f.name === nameToSave);
-        let newFormations = [...savedFormations];
-        
-        if (existingIndex >= 0) {
-            newFormations[existingIndex].players = players;
-        } else {
-            newFormations.push({ name: nameToSave, players });
-        }
-        
-        setSavedFormations(newFormations);
-        setCustomFormationName("");
-        setCustomMode(false);
-        setFormation(nameToSave);
-    };
-
-    const handleDeleteSavedFormation = (name, e) => {
-        e.stopPropagation();
-        const newFormations = savedFormations.filter(f => f.name !== name);
-        setSavedFormations(newFormations);
-        if (formation === name) {
-            changeFormation(baseFormations[0]);
-        }
-    };
-
-    // Checklist functions
-    const addActivity = () => {
-        if (newActivity.trim() === "") return;
-        setActivities([...activities, { text: newActivity, checked: false }]);
-        setNewActivity("");
-    };
-
-    const toggleActivity = (index) => {
-        setActivities((prev) =>
-            prev.map((a, i) => (i === index ? { ...a, checked: !a.checked } : a))
-        );
-    };
-
-    const removeActivity = (index) => {
-        setActivities((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    // Search functionality
-    const handleSearch = (query) => {
-        setSearchQuery(query);
-        if (query.trim() === '') {
-            setSearchResults([]);
-            setShowResults(false);
-            return;
-        }
-
-        const filtered = searchData.filter(item =>
-            item.title.toLowerCase().includes(query.toLowerCase())
-        );
-
-        setSearchResults(filtered);
-        setShowResults(true);
-    };
-
-    const handleResultClick = (result) => {
-        if (result.type === 'formation') {
-            if (result.title.includes(baseFormations[0])) {
-                changeFormation(baseFormations[0]);
-            } else if (result.title.includes(baseFormations[1])) {
-                changeFormation(baseFormations[1]);
-            } else if (result.title.includes('Custom')) {
-                enableCustomMode();
-            }
-        } else if (result.type === 'training') {
-            if (!activities.some(a => a.text === result.title)) {
-                setActivities([...activities, { text: result.title, checked: false }]);
-            }
-        }
-        setShowResults(false);
-        setSearchQuery('');
-    };
+    const activeTactic = tacticsList.find(t => t.id === selectedTacticId) || tacticsList[0];
 
     return (
-        <div 
-            className="flex-1 p-4 md:p-6 space-y-4 md:space-y-6 bg-[#212121] min-h-screen" 
-            onMouseMove={handleMouseMove} 
-            onMouseUp={handleMouseUp}
-            onTouchMove={(e) => {
-                if (draggingPlayer.current !== null) {
-                    const touch = e.touches[0];
-                    handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
-                }
-            }}
-            onTouchEnd={handleMouseUp}
-        >
-                {/* Header */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-                    <div>
-                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[#F5F5DC] mb-2 leading-tight">
-                            Sports Tactics & Training
-                        </h1>
-                        <p className="text-base md:text-lg text-[#F5F5DC]/80 font-normal leading-relaxed">
-                            Design formations, plan strategies, and track training progress
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-2 md:gap-4 w-full sm:w-auto">
-                        <div className="relative flex items-center bg-white rounded-full px-3 py-2 shadow-sm">
-                            <img src={searchIcon} alt="Search" className="w-4 h-4 mr-2" />
-                            <input
-                                type="text"
-                                placeholder="Search tactics..."
-                                value={searchQuery}
-                                onChange={(e) => handleSearch(e.target.value)}
-                                onFocus={() => searchQuery && setShowResults(true)}
-                                onBlur={() => setTimeout(() => setShowResults(false), 200)}
-                                className="outline-none text-sm bg-transparent font-normal w-full sm:w-32 md:w-40"
-                            />
+        <div className="flex-1 p-4 md:p-6 lg:p-8 bg-[#212121] min-h-screen text-[#F5F5DC] space-y-6">
 
-                            {/* Search Results Dropdown */}
-                            {showResults && (
-                                <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto z-50">
-                                    {searchResults.length > 0 ? (
-                                        searchResults.map((result) => (
-                                            <div
-                                                key={result.id}
-                                                onClick={() => handleResultClick(result)}
-                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-black border-b border-gray-100 last:border-b-0 text-sm"
-                                            >
-                                                {result.title}
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="px-4 py-2 text-gray-500 text-sm">
-                                            No results found
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <img src={notificationIcon} alt="Notifications" className="w-6 h-6 cursor-pointer hover:opacity-80 transition duration-300" />
+            {/* ── Page Header ──────────────────────────────────────────── */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#483C32]/35 pb-5">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-3 py-1 rounded-full bg-[#483C32]/40 border border-[#483C32] text-xs font-semibold text-[#c9a896]">
+                            {sportName} Command Center
+                        </span>
                     </div>
+                    <h1 className="text-2xl md:text-3xl font-bold text-[#F5F5DC]">
+                        Tactics Creation &amp; Training Progress
+                    </h1>
+                    <p className="text-xs md:text-sm text-[#F5F5DC]/55 mt-1">
+                        Design game strategies, manage playbook directives, and track team training goals
+                    </p>
                 </div>
 
-                {/* Formation & Checklist */}
-                <div className="flex flex-col xl:flex-row gap-4 md:gap-6">
-                    {/* Left Column */}
-                    <div className="w-full xl:w-1/4 space-y-4 md:space-y-6 order-2 xl:order-1">
-                        {/* Formation Type */}
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-lg p-4 md:p-5 shadow-lg">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
-                                <h3 className="font-bold text-[#F5F5DC] text-lg md:text-xl leading-tight">Formation Type</h3>
-                                <div className="flex gap-3">
-                                    <img src={calendarIcon} alt="Calendar" className="w-5 h-5 md:w-6 md:h-6 cursor-pointer hover:opacity-80 transition duration-300" />
-                                    <img src={tacticsIcon} alt="Tactics" className="w-5 h-5 md:w-6 md:h-6 cursor-pointer hover:opacity-80 transition duration-300" />
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {baseFormations.map((f) => (
-                                    <div
-                                        key={f}
-                                        onClick={() => changeFormation(f)}
-                                        className={`p-3 md:p-4 rounded-lg cursor-pointer transition-all duration-300 text-base md:text-lg font-normal ${
-                                            formation === f
-                                                ? "bg-[#483C32] text-white shadow-md font-bold"
-                                                : "bg-[#00000050] text-[#F5F5DC] hover:bg-[#483C32]/30 hover:text-white"
-                                        }`}
-                                    >
-                                        {f}
-                                    </div>
-                                ))}
+                {/* Right controls */}
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center bg-[#1a1a1a] border border-[#483C32]/50 focus-within:border-[#a38b82] rounded-full px-3.5 py-2 gap-2 flex-1 sm:flex-none transition-colors shadow-sm">
+                        <Search size={14} className="text-[#F5F5DC]/35 flex-shrink-0" />
+                        <input
+                            type="text"
+                            placeholder={`Search ${sportName} tactics...`}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="outline-none text-xs bg-transparent text-[#F5F5DC] placeholder-[#F5F5DC]/30 w-full sm:w-36"
+                        />
+                    </div>
+                    <button
+                        onClick={() => setShowNewTacticModal(true)}
+                        className="bg-gradient-to-r from-[#c9a896] to-[#a38b82] text-[#1a1a1a] px-4 py-2 rounded-full text-xs font-bold transition-all shadow-md hover:scale-105 flex items-center gap-1.5 cursor-pointer flex-shrink-0"
+                    >
+                        <Plus size={14} /> Create Tactic
+                    </button>
+                </div>
+            </div>
 
-                                {savedFormations.map((sf) => (
-                                    <div
-                                        key={sf.name}
-                                        onClick={() => changeFormation(sf.name)}
-                                        className={`p-3 md:p-4 rounded-lg flex justify-between items-center cursor-pointer transition-all duration-300 text-base md:text-lg font-normal ${
-                                            formation === sf.name
-                                                ? "bg-[#483C32] text-white shadow-md font-bold"
-                                                : "bg-[#00000050] text-[#F5F5DC] hover:bg-[#483C32]/30 hover:text-white"
-                                        }`}
-                                    >
-                                        <span>{sf.name}</span>
-                                        <button 
-                                            onClick={(e) => handleDeleteSavedFormation(sf.name, e)}
-                                            className="text-red-400 hover:text-red-300 text-xl leading-none px-2 focus:outline-none"
-                                            title="Delete formation"
-                                        >×</button>
-                                    </div>
-                                ))}
-                                <button
-                                    onClick={enableCustomMode}
-                                    className={`w-full border border-[#483C32] rounded-lg p-3 md:p-4 text-sm md:text-base font-normal transition-all duration-300 ${
-                                        customMode
-                                            ? "bg-[#483C32] text-white shadow-md font-bold"
-                                            : "bg-[#00000050] text-[#F5F5DC] hover:bg-[#483C32]/30 hover:text-white"
-                                    }`}
-                                >
-                                    + Create Custom Formation
-                                </button>
-                            </div>
+            {/* ── View Navigation Tabs ─────────────────────────────────── */}
+            <div className="flex gap-2 border-b border-[#483C32]/30 pb-3 overflow-x-auto scrollbar-hide">
+                {[
+                    { id: "creator", label: "Tactics Creator & Playbook", icon: Layers },
+                    { id: "tracker", label: `Training Progress (${progressPct}%)`, icon: Activity },
+                ].map(({ id, label, icon: Icon }) => (
+                    <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+                            activeTab === id
+                                ? 'bg-[#483C32] text-[#F5F5DC] border border-[#a38b82]/40 shadow-sm'
+                                : 'bg-[#1a1a1a] text-[#F5F5DC]/55 border border-[#483C32]/25 hover:bg-[#262626] hover:text-[#F5F5DC]'
+                        }`}
+                    >
+                        <Icon size={14} className={activeTab === id ? 'text-[#c9a896]' : 'text-[#F5F5DC]/40'} />
+                        {label}
+                    </button>
+                ))}
+            </div>
+
+            {/* ── Tab 1: Tactics Creator & Playbook ──────────────────────── */}
+            {activeTab === "creator" && (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+                    {/* Left: Saved Playbook Tactics List (4 Cols) */}
+                    <div className="lg:col-span-4 bg-[#1a1a1a] border border-[#483C32]/45 rounded-xl p-5 shadow-xl space-y-4">
+                        <div className="flex justify-between items-center pb-3 border-b border-[#483C32]/30">
+                            <h3 className="font-bold text-sm text-[#F5F5DC] flex items-center gap-2">
+                                <Shield size={16} className="text-[#c9a896]" />
+                                {sportName} Playbook ({tacticsList.length})
+                            </h3>
+                            <button
+                                onClick={() => setShowNewTacticModal(true)}
+                                className="text-xs text-[#c9a896] hover:text-[#d4b5a2] font-semibold flex items-center gap-1"
+                            >
+                                + New
+                            </button>
                         </div>
 
-                        {/* Training Checklist */}
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] rounded-lg p-4 md:p-5 shadow-lg">
-                            <h3 className="font-bold mb-4 text-[#F5F5DC] text-lg md:text-xl leading-tight">Training Checklist</h3>
-                            <div className="flex gap-2 mb-3">
-                                <input
-                                    type="text"
-                                    value={newActivity}
-                                    onChange={(e) => setNewActivity(e.target.value)}
-                                    placeholder="Add training activity..."
-                                    className="flex-1 rounded p-1 text-sm bg-gradient-to-br from-[#212121] to-[#483C32] border border-[#483C32] text-[#F5F5DC] placeholder-[#F5F5DC]/70"
-                                />
-                                <button
-                                    onClick={addActivity}
-                                    className="bg-[#483C32] text-[#F5F5DC] px-3 py-1 rounded hover:bg-[#5a4a3e] transition duration-300"
-                                >
-                                    Add
-                                </button>
-                            </div>
-                            <ul className="space-y-2">
-                                {activities.map((a, i) => (
-                                    <li key={i} className="flex items-center justify-between bg-[#ffffff10] p-2 rounded">
-                                        <label className="flex items-center gap-2 cursor-pointer" style={{ color: "#F5F5DC" }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={a.checked}
-                                                onChange={() => toggleActivity(i)}
-                                            />
-                                            {a.text}
-                                        </label>
-                                        <button onClick={() => removeActivity(i)} className="text-red-400">×</button>
-                                    </li>
-                                ))}
-                            </ul>
+                        <div className="space-y-2.5 max-h-[550px] overflow-y-auto scrollbar-thin pr-1">
+                            {tacticsList.map((tactic) => {
+                                const isSelected = tactic.id === selectedTacticId;
+                                return (
+                                    <div
+                                        key={tactic.id}
+                                        onClick={() => setSelectedTacticId(tactic.id)}
+                                        className={`p-4 rounded-xl border transition-all cursor-pointer flex justify-between items-start ${
+                                            isSelected
+                                                ? 'bg-[#262626] border-[#a38b82]/60 shadow-md'
+                                                : 'bg-[#181818] border-[#483C32]/30 hover:border-[#483C32]/60 hover:bg-[#222222]'
+                                        }`}
+                                    >
+                                        <div>
+                                            <h4 className="text-sm font-bold text-[#F5F5DC] mb-1">{tactic.name}</h4>
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#483C32]/40 text-[#c9a896] font-medium border border-[#483C32]/50">
+                                                    {tactic.phase}
+                                                </span>
+                                                <span className="text-[11px] text-[#F5F5DC]/45 flex items-center gap-1">
+                                                    <Flame size={10} className="text-amber-400" /> {tactic.intensity}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleDeleteTactic(tactic.id); }}
+                                            className="text-[#F5F5DC]/30 hover:text-red-400 p-1 transition-colors"
+                                            title="Delete tactic"
+                                        >
+                                            <Trash2 size={13} />
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* Right Column - Pitch */}
-                    <div className="flex-1 w-full xl:w-3/4 order-1 xl:order-2">
-                        <div className="bg-gradient-to-br from-[#212121] to-[#483C32] p-3 md:p-4 rounded-t-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-[#F5F5DC] border border-[#483C32] border-b-0">
-                            <span className="text-base md:text-lg lg:text-xl font-bold leading-tight">{sportName}: {formation} Formation</span>
-                            {customMode && (
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm md:text-base text-yellow-300 font-normal bg-yellow-300/10 px-2 py-1 rounded hidden sm:inline-block">Custom Mode Active</span>
-                                    <input 
-                                        type="text" 
-                                        placeholder="Formation Name" 
-                                        className="bg-[#212121] text-xs text-[#F5F5DC] p-1.5 md:p-2 rounded w-24 md:w-32 border border-[#483C32] outline-none" 
-                                        value={customFormationName} 
-                                        onChange={e => setCustomFormationName(e.target.value)} 
-                                    />
-                                    <button onClick={handleSaveCustomFormation} className="bg-green-600 text-white text-xs px-3 py-1.5 md:py-2 rounded hover:bg-green-700 transition">Save</button>
+                    {/* Right: Detailed Strategy Inspector (8 Cols) */}
+                    <div className="lg:col-span-8 bg-[#1a1a1a] border border-[#483C32]/45 rounded-xl p-6 shadow-xl flex flex-col justify-between">
+                        {activeTactic ? (
+                            <div className="space-y-6">
+                                {/* Strategy Banner */}
+                                <div className="bg-[#262626] border border-[#483C32]/35 p-5 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div>
+                                        <span className="text-xs font-semibold text-[#a38b82] uppercase tracking-wider block mb-1">Active Tactic</span>
+                                        <h2 className="text-xl font-bold text-[#F5F5DC]">{activeTactic.name}</h2>
+                                        <p className="text-xs text-[#F5F5DC]/55 mt-0.5">Phase: {activeTactic.phase}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="px-3 py-1 rounded-full bg-amber-950/40 border border-amber-800/40 text-amber-300 text-xs font-semibold flex items-center gap-1">
+                                            <Flame size={12} /> {activeTactic.intensity} Intensity
+                                        </span>
+                                    </div>
                                 </div>
-                            )}
+
+                                {/* Tactical Focus Card */}
+                                <div className="bg-[#181818] border border-[#483C32]/30 p-5 rounded-xl">
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#F5F5DC]/50 mb-2 flex items-center gap-2">
+                                        <Target size={14} className="text-[#c9a896]" /> Tactical Objective &amp; Focus
+                                    </h4>
+                                    <p className="text-sm text-[#F5F5DC]/90 leading-relaxed font-medium">
+                                        {activeTactic.focus || "No specific objective detailed yet."}
+                                    </p>
+                                </div>
+
+                                {/* Sport-Specific Execution Controls */}
+                                <div className="bg-[#181818] border border-[#483C32]/30 p-5 rounded-xl space-y-4">
+                                    <h4 className="text-xs font-semibold uppercase tracking-wider text-[#F5F5DC]/50 flex items-center gap-2">
+                                        <Sliders size={14} className="text-[#c9a896]" /> {sportName} Execution Directives
+                                    </h4>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
+                                            <span className="text-[#F5F5DC]/50 block mb-1">Pressing / Tempo Control</span>
+                                            <span className="text-[#F5F5DC] font-semibold">Aggressive Front Press</span>
+                                        </div>
+                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
+                                            <span className="text-[#F5F5DC]/50 block mb-1">Transition Directives</span>
+                                            <span className="text-[#F5F5DC] font-semibold">Quick Vertical Pass</span>
+                                        </div>
+                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
+                                            <span className="text-[#F5F5DC]/50 block mb-1">Defensive Compactness</span>
+                                            <span className="text-[#F5F5DC] font-semibold">Mid-Block Line</span>
+                                        </div>
+                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
+                                            <span className="text-[#F5F5DC]/50 block mb-1">Set-Piece Focus</span>
+                                            <span className="text-[#F5F5DC] font-semibold">Far-Post Target Scheme</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {activeTactic.notes && (
+                                    <div className="bg-[#181818] border border-[#483C32]/30 p-4 rounded-xl">
+                                        <span className="text-xs text-[#F5F5DC]/50 block mb-1">Coach Notes</span>
+                                        <p className="text-xs text-[#F5F5DC]/75 leading-relaxed">{activeTactic.notes}</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 text-[#F5F5DC]/40 text-sm">
+                                No tactic selected. Create a new tactic to get started.
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Tab 2: Training Progress Tracker ───────────────────────── */}
+            {activeTab === "tracker" && (
+                <div className="space-y-6">
+                    {/* Overall Progress Banner */}
+                    <div className="bg-[#1a1a1a] border border-[#483C32]/45 rounded-xl p-6 shadow-xl">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                            <div>
+                                <h3 className="text-lg font-bold text-[#F5F5DC] flex items-center gap-2">
+                                    <Activity size={18} className="text-[#c9a896]" />
+                                    {sportName} Training Completion Status
+                                </h3>
+                                <p className="text-xs text-[#F5F5DC]/55 mt-1">
+                                    Completed <strong className="text-[#c9a896]">{completedCount}</strong> of <strong className="text-[#F5F5DC]">{totalCount}</strong> scheduled drills &amp; recovery items
+                                </p>
+                            </div>
+                            <div className="text-2xl font-black text-[#c9a896]">
+                                {progressPct}%
+                            </div>
                         </div>
-                        <div
-                            className="relative border-2 border-[#483C32] w-full h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[730px] overflow-hidden"
-                            ref={pitchRef}
-                            style={{
-                                ...(currentSportConfig.bgShape !== "none" 
-                                    ? { background: currentSportConfig.bgShape } 
-                                    : { 
-                                        backgroundImage: currentSportConfig.bgImage,
-                                        backgroundColor: currentSportConfig.bgColor
-                                      }
-                                ),
-                                backgroundSize: currentSportConfig.bgSize,
-                                backgroundPosition: "center",
-                                backgroundRepeat: "no-repeat",
-                                borderRadius: currentSportConfig.borderRadius,
-                                boxShadow: "0px 0px 10px rgba(0, 0, 0, 0.2)",
-                                touchAction: "none" // Better for mobile drag
-                            }}
-                        >
-                            {players.map((player) => (
-                                <div
-                                    key={player.id}
-                                    onMouseDown={(e) => handleMouseDown(e, player.id)}
-                                    onTouchStart={(e) => {
-                                        if (customMode) {
-                                            const touch = e.touches[0];
-                                            handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY }, player.id);
-                                        }
-                                    }}
-                                    className={`absolute w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 bg-[#483C32] text-white rounded-full flex items-center justify-center select-none text-[10px] sm:text-xs font-bold shadow-md transform -translate-x-1/2 -translate-y-1/2 ${customMode ? 'cursor-move ring-2 ring-yellow-400' : 'cursor-default border border-[#F5F5DC]/30'}`}
-                                    style={{ 
-                                        top: `${player.y * 100}%`, 
-                                        left: `${player.x * 100}%` 
-                                    }}
+
+                        {/* Progress bar */}
+                        <div className="w-full bg-[#262626] rounded-full h-3 border border-[#483C32]/30 overflow-hidden">
+                            <div
+                                className="h-full bg-gradient-to-r from-[#c9a896] to-[#a38b82] transition-all duration-500 rounded-full"
+                                style={{ width: `${progressPct}%` }}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Quick Add & Filter Bar */}
+                    <div className="bg-[#1a1a1a] border border-[#483C32]/45 rounded-xl p-4 flex flex-col sm:flex-row gap-3 justify-between items-center">
+                        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto flex-1">
+                            <input
+                                type="text"
+                                value={newActivityText}
+                                onChange={(e) => setNewActivityText(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleAddActivity()}
+                                placeholder="Add new training activity or drill..."
+                                className="w-full sm:flex-1 bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] placeholder-[#F5F5DC]/30 px-4 py-2.5 rounded-xl text-xs outline-none transition-colors"
+                            />
+                            <select
+                                value={newActivityCategory}
+                                onChange={(e) => setNewActivityCategory(e.target.value)}
+                                className="w-full sm:w-auto bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] px-3.5 py-2.5 rounded-xl text-xs outline-none cursor-pointer transition-colors"
+                            >
+                                <option value="Tactical">Tactical</option>
+                                <option value="Conditioning">Conditioning</option>
+                                <option value="Recovery">Recovery</option>
+                                <option value="Set Pieces">Set Pieces</option>
+                                <option value="Physical">Physical</option>
+                                <option value="General">General</option>
+                            </select>
+                            <button
+                                onClick={handleAddActivity}
+                                className="w-full sm:w-auto bg-[#483C32] hover:bg-[#5a4a3e] text-[#F5F5DC] px-4 py-2.5 rounded-xl text-xs font-semibold transition-colors flex-shrink-0 flex items-center justify-center gap-1 cursor-pointer"
+                            >
+                                <Plus size={14} /> Add
+                            </button>
+                        </div>
+
+                        {/* Category filter */}
+                        <div className="flex gap-1 overflow-x-auto scrollbar-hide w-full sm:w-auto">
+                            {["All", "Tactical", "Conditioning", "Recovery", "Set Pieces", "General"].map(cat => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setSelectedCategoryFilter(cat)}
+                                    className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ${
+                                        selectedCategoryFilter === cat
+                                            ? 'bg-[#483C32] text-[#F5F5DC] border border-[#a38b82]/30'
+                                            : 'bg-[#262626] text-[#F5F5DC]/50 hover:text-[#F5F5DC]'
+                                    }`}
                                 >
-                                    {player.position}
-                                </div>
+                                    {cat}
+                                </button>
                             ))}
                         </div>
                     </div>
+
+                    {/* Checklist Grid */}
+                    <div className="space-y-2">
+                        {filteredChecklist.length > 0 ? filteredChecklist.map((item) => (
+                            <div
+                                key={item.id}
+                                className={`bg-[#1a1a1a] border border-[#483C32]/35 p-4 rounded-xl flex items-center justify-between transition-all ${
+                                    item.checked ? 'opacity-65 bg-[#181818]' : 'hover:border-[#a38b82]/50'
+                                }`}
+                            >
+                                <label className="flex items-center gap-3.5 cursor-pointer flex-1 min-w-0">
+                                    <div
+                                        onClick={() => handleToggleActivity(item.id)}
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center border transition-all ${
+                                            item.checked
+                                                ? 'bg-green-700 border-green-600 text-white'
+                                                : 'border-[#483C32] bg-[#262626] hover:border-[#a38b82]'
+                                        }`}
+                                    >
+                                        {item.checked && <Check size={13} />}
+                                    </div>
+                                    <span className={`text-sm font-medium transition-all truncate ${
+                                        item.checked ? 'line-through text-[#F5F5DC]/40' : 'text-[#F5F5DC]/90'
+                                    }`}>
+                                        {item.text}
+                                    </span>
+                                </label>
+
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                    <span className="text-[10px] px-2.5 py-1 rounded-full bg-[#262626] border border-[#483C32]/30 text-[#F5F5DC]/50 font-medium hidden sm:inline-block">
+                                        {item.category}
+                                    </span>
+                                    <button
+                                        onClick={() => handleDeleteActivity(item.id)}
+                                        className="text-[#F5F5DC]/30 hover:text-red-400 p-1 transition-colors"
+                                        title="Delete activity"
+                                    >
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
+                        )) : (
+                            <div className="text-center py-12 bg-[#1a1a1a] border border-[#483C32]/30 rounded-xl text-sm text-[#F5F5DC]/40">
+                                No training activities found. Add a new activity above.
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
+
+            {/* ── Create Tactic Modal ────────────────────────────────────── */}
+            {showNewTacticModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowNewTacticModal(false)}>
+                    <div className="bg-[#1a1a1a] border border-[#483C32]/50 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4" onClick={e => e.stopPropagation()}>
+                        <div className="flex justify-between items-center pb-3 border-b border-[#483C32]/30">
+                            <h3 className="font-bold text-[#F5F5DC] text-base flex items-center gap-2">
+                                <Plus size={16} className="text-[#c9a896]" /> Create New {sportName} Strategy
+                            </h3>
+                            <button onClick={() => setShowNewTacticModal(false)} className="text-[#F5F5DC]/40 hover:text-[#F5F5DC]">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateTactic} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-semibold text-[#F5F5DC]/60 uppercase tracking-wide block mb-1.5">Strategy Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="e.g. High-Pressing 4-3-3 Wing Overload"
+                                    value={newTactic.name}
+                                    onChange={e => setNewTactic({ ...newTactic, name: e.target.value })}
+                                    className="w-full bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] placeholder-[#F5F5DC]/30 px-3.5 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-[#F5F5DC]/60 uppercase tracking-wide block mb-1.5">Match Phase</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Offensive Press / Powerplay / Attacking 22m"
+                                    value={newTactic.phase}
+                                    onChange={e => setNewTactic({ ...newTactic, phase: e.target.value })}
+                                    className="w-full bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] placeholder-[#F5F5DC]/30 px-3.5 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-[#F5F5DC]/60 uppercase tracking-wide block mb-1.5">Tactical Objective &amp; Focus</label>
+                                <textarea
+                                    rows={3}
+                                    placeholder="Describe key directives and positional instructions..."
+                                    value={newTactic.focus}
+                                    onChange={e => setNewTactic({ ...newTactic, focus: e.target.value })}
+                                    className="w-full bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] placeholder-[#F5F5DC]/30 px-3.5 py-2.5 rounded-xl text-sm outline-none transition-colors resize-none"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-semibold text-[#F5F5DC]/60 uppercase tracking-wide block mb-1.5">Intensity Level</label>
+                                <select
+                                    value={newTactic.intensity}
+                                    onChange={e => setNewTactic({ ...newTactic, intensity: e.target.value })}
+                                    className="w-full bg-[#262626] border border-[#483C32]/50 focus:border-[#a38b82] text-[#F5F5DC] px-3.5 py-2.5 rounded-xl text-sm outline-none transition-colors"
+                                >
+                                    <option value="High">High Intensity</option>
+                                    <option value="Medium">Medium Intensity</option>
+                                    <option value="Low">Low Intensity</option>
+                                </select>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowNewTacticModal(false)}
+                                    className="px-4 py-2.5 rounded-xl bg-[#262626] hover:bg-[#2e2e2e] text-[#F5F5DC]/70 text-xs font-semibold transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#c9a896] to-[#a38b82] text-[#1a1a1a] text-xs font-bold transition-all hover:scale-105 shadow-md"
+                                >
+                                    Save Tactic
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
     );
 }
