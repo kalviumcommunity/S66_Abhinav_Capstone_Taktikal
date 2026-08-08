@@ -1,23 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './AuthContext';
+import { getSportPositions } from '../constants/sports';
 
 const AthleteContext = createContext();
 
-export const getSportPositions = (sport) => {
-    switch(sport) {
-        case 'Cricket': return ["Batsman", "Bowler", "All-Rounder", "Wicketkeeper"];
-        case 'Volleyball': return ["Setter", "Libero", "Middle Blocker", "Outside Hitter", "Opposite Hitter"];
-        case 'Basketball': return ["Point Guard", "Shooting Guard", "Small Forward", "Power Forward", "Center"];
-        case 'Handball': return ["Left Wing", "Right Wing", "Pivot", "Left Back", "Right Back"];
-        case 'Rugby': return ["Prop", "Hooker", "Lock", "Flanker", "Number 8", "Scrum-half", "Fly-half", "Centre", "Wing", "Fullback"];
-        case 'Chess': return ["Grandmaster Candidate", "Blitz Specialist", "Endgame Strategist", "Opening Analyst", "Tactical Solver"];
-        case 'Table Tennis': return ["Attacker", "Defensive Chopper", "Serve Specialist", "Doubles Partner"];
-        case 'Badminton': return ["Singles Specialist", "Doubles Specialist", "Net Specialist", "Smash Specialist"];
-        case 'Football':
-        default:
-            return ["Forward", "Midfielder", "Defender", "Goalkeeper"];
-    }
-};
+export { getSportPositions };
 
 export const useAthletes = () => {
     const context = useContext(AthleteContext);
@@ -223,8 +210,10 @@ export const AthleteProvider = ({ children }) => {
         fetchAthletes,
         fetchPerformanceData,
         loading,
+        sport,
+        sportPositions,
     }), [
-        athletes, performanceData, loading,
+        athletes, performanceData, loading, sport, sportPositions,
         addAthlete, removeAthlete, updateAthlete, getAthletesByPosition,
         getAthleteStats, updatePerformanceData, fetchAthletes, fetchPerformanceData
     ]);

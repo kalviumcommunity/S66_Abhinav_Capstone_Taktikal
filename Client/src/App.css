@@ -28,7 +28,7 @@
 /* ─── Global Font ────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
-  font-family: -apple-system, "system-ui", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Poppins", -apple-system, "system-ui", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 html, body {

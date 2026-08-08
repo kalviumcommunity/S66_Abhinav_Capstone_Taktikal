@@ -1,4 +1,5 @@
 const Athlete = require('../models/athleteModel');
+const { getSportPositions, isValidPosition } = require('../utils/sports');
 
 // Helper to escape regex special characters for NoSQL search queries
 const escapeRegex = (text) => {
@@ -14,19 +15,13 @@ const addAthlete = async (req, res) => {
             return res.status(400).json({ message: 'Please provide all required fields: name, position, speed, strength, stamina' });
         }
 
-        const validPositions = [
-            'Forward', 'Midfielder', 'Defender', 'Goalkeeper', // Football
-            'Batsman', 'Bowler', 'All-Rounder', 'Wicketkeeper', // Cricket
-            'Setter', 'Libero', 'Middle Blocker', 'Outside Hitter', 'Opposite Hitter', // Volleyball
-            'Point Guard', 'Shooting Guard', 'Small Forward', 'Power Forward', 'Center', // Basketball
-            'Left Wing', 'Right Wing', 'Pivot', 'Left Back', 'Right Back', // Handball
-            'Prop', 'Hooker', 'Lock', 'Flanker', 'Number 8', 'Scrum-half', 'Fly-half', 'Centre', 'Wing', 'Fullback', // Rugby
-            'Grandmaster Candidate', 'Blitz Specialist', 'Endgame Strategist', 'Opening Analyst', 'Tactical Solver', // Chess
-            'Attacker', 'Defensive Chopper', 'Serve Specialist', 'Doubles Partner', // Table Tennis
-            'Singles Specialist', 'Doubles Specialist', 'Net Specialist', 'Smash Specialist' // Badminton
-        ];
-        if (!validPositions.includes(position)) {
-            return res.status(400).json({ message: 'Invalid position/role specified' });
+        const coachSport = req.user?.sport || null;
+        if (!isValidPosition(position, coachSport)) {
+            return res.status(400).json({
+                message: coachSport
+                    ? `Invalid position/role for ${coachSport}`
+                    : 'Invalid position/role specified'
+            });
         }
 
         const speedNum = Number(speed);
@@ -164,6 +159,14 @@ const updateAthlete = async (req, res) => {
         const { id } = req.params;
         const { name, position, speed, strength, stamina } = req.body;
 
+        if (position !== undefined && !isValidPosition(position, req.user?.sport || null)) {
+            return res.status(400).json({
+                message: req.user?.sport
+                    ? `Invalid position/role for ${req.user.sport}`
+                    : 'Invalid position/role specified'
+            });
+        }
+
         const updateFields = {};
         if (name !== undefined) updateFields.name = name.trim();
         if (position !== undefined) updateFields.position = position;
@@ -230,20 +233,19 @@ const deleteAthlete = async (req, res) => {
 const getAthleteStats = async (req, res) => {
     try {
         const coachId = req.user._id;
-
+        const positions = getSportPositions(req.user?.sport || 'Football');
         const athletes = await Athlete.find({ coach: coachId, isActive: true });
 
-        const stats = {
-            total: athletes.length,
-            byPosition: {
-                Forward: athletes.filter(a => a.position === 'Forward').length,
-                Midfielder: athletes.filter(a => a.position === 'Midfielder').length,
-                Defender: athletes.filter(a => a.position === 'Defender').length,
-                Goalkeeper: athletes.filter(a => a.position === 'Goalkeeper').length
-            }
-        };
+        const byPosition = {};
+        positions.forEach((pos) => {
+            byPosition[pos] = athletes.filter((a) => a.position === pos).length;
+        });
 
-        res.status(200).json(stats);
+        res.status(200).json({
+            total: athletes.length,
+            byPosition,
+            sport: req.user?.sport || 'Football',
+        });
     } catch (error) {
         console.error('Get athlete stats error:', error.message);
         res.status(500).json({ message: 'Server Error fetching stats' });

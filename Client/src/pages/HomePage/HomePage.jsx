@@ -1,8 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { motion } from 'framer-motion'
-import { ArrowRight, Check, Mail, MessageCircle, BookOpen } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { ArrowRight, Check, Mail, MessageCircle, BookOpen, Menu, X } from 'lucide-react'
 
 import taktikalLogo from '../../assets/TAKTIKAL.svg'
 import athleteIcon from '../../assets/athlete management@3x.png'
@@ -28,6 +28,7 @@ const stagger = {
 const HomePage = () => {
     const navigate = useNavigate()
     const { isAuthenticated, logout, user } = useAuth()
+    const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
     const handleSignUp    = () => navigate('/signup')
     const handleDashboard = () => {
@@ -41,6 +42,7 @@ const HomePage = () => {
         const targetId = (id === 'about' || id === 'support') ? 'about-support-footer' : id
         const el = document.getElementById(targetId)
         if (el) el.scrollIntoView({ behavior: 'smooth' })
+        setMobileNavOpen(false)
     }
 
     const navLinks = ['Overview', 'Features', 'About', 'Support']
@@ -74,8 +76,8 @@ const HomePage = () => {
                             ))}
                         </ul>
 
-                        {/* Auth buttons */}
-                        <div className="flex items-center gap-3">
+                        {/* Auth buttons + mobile menu toggle */}
+                        <div className="flex items-center gap-2 sm:gap-3">
                             {isAuthenticated() ? (
                                 <>
                                     <span className="hidden sm:block text-sm text-[#F5F5DC]/70">
@@ -83,7 +85,7 @@ const HomePage = () => {
                                     </span>
                                     <button
                                         onClick={handleLogout}
-                                        className="border border-[#483C32] text-[#F5F5DC]/80 hover:border-[#a38b82] hover:text-[#F5F5DC] px-4 py-2 rounded-full text-sm font-medium transition-all"
+                                        className="border border-[#483C32] text-[#F5F5DC]/80 hover:border-[#a38b82] hover:text-[#F5F5DC] px-3 sm:px-4 py-2 rounded-full text-sm font-medium transition-all"
                                     >
                                         Logout
                                     </button>
@@ -92,20 +94,53 @@ const HomePage = () => {
                                 <>
                                     <button
                                         onClick={handleLogin}
-                                        className="border border-[#483C32] text-[#F5F5DC]/80 hover:border-[#a38b82] hover:text-[#F5F5DC] px-4 py-2 rounded-full text-sm font-medium transition-all"
+                                        className="border border-[#483C32] text-[#F5F5DC]/80 hover:border-[#a38b82] hover:text-[#F5F5DC] px-3 sm:px-4 py-2 rounded-full text-sm font-medium transition-all"
                                     >
                                         Login
                                     </button>
                                     <button
                                         onClick={handleSignUp}
-                                        className="bg-[#483C32] hover:bg-[#5a4a3e] text-[#F5F5DC] px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm"
+                                        className="bg-[#483C32] hover:bg-[#5a4a3e] text-[#F5F5DC] px-3 sm:px-4 py-2 rounded-full text-sm font-medium transition-all shadow-sm"
                                     >
                                         Sign Up
                                     </button>
                                 </>
                             )}
+                            <button
+                                type="button"
+                                className="md:hidden min-w-11 min-h-11 flex items-center justify-center rounded-full border border-[#483C32]/50 text-[#F5F5DC]/80 hover:text-[#F5F5DC] hover:border-[#a38b82] transition-all"
+                                aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+                                aria-expanded={mobileNavOpen}
+                                onClick={() => setMobileNavOpen((open) => !open)}
+                            >
+                                {mobileNavOpen ? <X size={18} /> : <Menu size={18} />}
+                            </button>
                         </div>
                     </nav>
+
+                    <AnimatePresence>
+                        {mobileNavOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="md:hidden overflow-hidden border-t border-[#483C32]/30"
+                            >
+                                <ul className="flex flex-col py-3 gap-1">
+                                    {navLinks.map((link) => (
+                                        <li key={link}>
+                                            <button
+                                                onClick={() => scrollToSection(link.toLowerCase().replace(' ', ''))}
+                                                className="w-full text-left px-2 py-3 text-sm font-medium text-[#F5F5DC]/80 hover:text-[#F5F5DC] hover:bg-[#262626] rounded-lg transition-colors"
+                                            >
+                                                {link}
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </header>
 
@@ -209,7 +244,7 @@ const HomePage = () => {
                             >
                                 {[
                                     { icon: athleteIcon, title: 'Athlete Management', desc: 'Keep track of your athletes\' information, performance metrics, and development progress securely.' },
-                                    { icon: tacticalIcon, title: 'Tactical Planning', desc: 'Create and store tactical formations with visual drag-and-drop precise player positioning tools.' },
+                                    { icon: tacticalIcon, title: 'Tactical Planning', desc: 'Build and save sport-specific strategies, training checklists, and playbook plans for your team.' },
                                     { icon: analyticsIcon, title: 'Performance Analytics', desc: 'Gain actionable insights from performance data intelligently to track and visualize improvements over time.' },
                                 ].map((card, i) => (
                                     <motion.div
@@ -300,7 +335,7 @@ const HomePage = () => {
                             </p>
                         </div>
                         <p className="text-sm text-[#c9a896] font-medium leading-relaxed mt-auto">
-                            Empowering coaches with advanced tools to develop champions and effectively manage tactical formations seamlessly.
+                            Empowering coaches with advanced tools to develop champions and manage sport-specific tactics seamlessly.
                         </p>
                     </div>
 

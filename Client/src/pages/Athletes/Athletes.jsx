@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAthletes } from "../../context/AthleteContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Bell, Plus, ArrowUpDown, X, Trophy } from "lucide-react";
@@ -36,12 +36,23 @@ export default function Athletes() {
     const [sortBy,   setSortBy]   = useState('name');
     const [sortOrder, setSortOrder] = useState('asc');
 
-    const { athletes = [], addAthlete, removeAthlete, sportPositions = [] } = useAthletes() || {};
+    const { athletes = [], addAthlete, removeAthlete, sportPositions = [], sport } = useAthletes() || {};
     const safePositions = sportPositions || [];
+    const defaultPosition = safePositions[0] || '';
 
     const [newAthlete, setNewAthlete] = useState({
-        name: '', position: safePositions[0] || 'Forward', speed: 5, strength: 5, stamina: 5
+        name: '', position: defaultPosition, speed: 5, strength: 5, stamina: 5
     });
+
+    useEffect(() => {
+        setNewAthlete((prev) => ({
+            ...prev,
+            position: safePositions.includes(prev.position) ? prev.position : defaultPosition,
+        }));
+        setSelectedPosition((prev) =>
+            prev === 'All Positions' || safePositions.includes(prev) ? prev : 'All Positions'
+        );
+    }, [sport, safePositions, defaultPosition]);
 
     const filterPositions = ['All Positions', ...safePositions];
 
@@ -79,7 +90,7 @@ export default function Athletes() {
             try {
                 const result = await addAthlete(newAthlete);
                 if (result.success) {
-                    setNewAthlete({ name: '', position: safePositions[0] || 'Forward', speed: 5, strength: 5, stamina: 5 });
+                    setNewAthlete({ name: '', position: defaultPosition, speed: 5, strength: 5, stamina: 5 });
                     setShowAddModal(false);
                 } else {
                     alert(result.message || 'Failed to add athlete');

@@ -3,7 +3,7 @@
 **Production Link:** [https://taktikal.netlify.app/](https://taktikal.netlify.app/)
 
 ## 📌 Project Overview
-Taktikal is a modern web application designed for sports coaches to manage team rosters across multiple sports (Football, Cricket, Volleyball, Handball, Rugby), plan tactical formations on interactive boards, track athlete performance metrics over time, and consult an AI Sports Coach Assistant for drills and recovery strategies.
+Taktikal is a modern web application designed for sports coaches to manage team rosters across multiple sports (Football, Cricket, Volleyball, Handball, Rugby, Basketball, Chess, Table Tennis, Badminton), plan sport-specific tactics and training checklists, track athlete performance metrics over time, and consult an AI Sports Coach Assistant for drills and recovery strategies.
 
 ---
 
@@ -11,7 +11,7 @@ Taktikal is a modern web application designed for sports coaches to manage team 
 - 🔑 **Secure Authentication**: JWT + HttpOnly cookie authentication, rate-limited auth endpoints, and mass-assignment protection.
 - 🏃 **Athlete Management**: Roster creation, position filtering, performance scoring, and search capabilities.
 - 📈 **Performance Analytics**: Visual performance trends using Recharts with atomic dataset updating.
-- 📋 **Tactics & Formation Builder**: Interactive pitch builder supporting multi-sport formations (4-3-3, 4-4-2, 5-1 Volleyball, Cricket field setups).
+- 📋 **Tactics & Playbook Builder**: Sport-specific strategy presets, execution directives, and training checklists for all 9 supported sports.
 - 🤖 **AI Coach Assistant**: Sports intelligence engine offering training plans, recovery guidance, and nutrition advice.
 - ⚖️ **Legal Compliance**: Complete Terms of Service, Privacy Policy, and SEO metadata.
 

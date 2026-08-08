@@ -4,11 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, User, Trophy, ArrowRight } from "lucide-react";
 import taktikalLogo from "../../assets/TAKTIKAL.svg";
-
-const SPORTS = [
-    'Football', 'Cricket', 'Volleyball', 'Handball', 'Rugby',
-    'Basketball', 'Chess', 'Table Tennis', 'Badminton'
-];
+import { SPORTS } from "../../constants/sports";
 
 export default function SignUp() {
     const navigate = useNavigate();

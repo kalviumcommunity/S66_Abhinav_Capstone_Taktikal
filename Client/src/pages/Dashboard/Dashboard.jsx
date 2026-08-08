@@ -46,7 +46,7 @@ const fadeUp = {
 export default function Dashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showEditModal, setShowEditModal] = useState(false);
-    const { performanceData, updatePerformanceData, getAthleteStats, sportPositions } = useAthletes();
+    const { performanceData, updatePerformanceData, getAthleteStats, sportPositions, sport } = useAthletes();
 
     const handleSearch   = (query) => { setSearchQuery(query); console.log('Dashboard search:', query); };
     const handleSavePerf = (newData) => updatePerformanceData(newData);
@@ -54,10 +54,8 @@ export default function Dashboard() {
     const athleteStats       = getAthleteStats() || { total: 0, byPosition: {} };
     const safePositions      = sportPositions || [];
     const safeByPosition     = athleteStats.byPosition || {};
-    const lastPosition       = safePositions.length > 0 ? safePositions[safePositions.length - 1] : null;
-    const subOrLastCount     = lastPosition ? (safeByPosition[lastPosition] || 0) : 0;
-    const activePlayers      = Math.max(0, (athleteStats.total || 0) - subOrLastCount);
     const filledPositionsCnt = Object.values(safeByPosition).filter(c => c > 0).length;
+    const openRolesCnt       = Math.max(0, safePositions.length - filledPositionsCnt);
     const previousWeekCount  = Math.max(0, (athleteStats.total || 0) - 2);
     const weekDiff           = (athleteStats.total || 0) - previousWeekCount;
 
@@ -104,18 +102,18 @@ export default function Dashboard() {
                 </motion.div>
                 <motion.div variants={fadeUp}>
                     <StatCard
-                        label="Active Players"
-                        value={activePlayers}
-                        sub="Field players"
+                        label="Roles Covered"
+                        value={`${filledPositionsCnt}/${safePositions.length || 0}`}
+                        sub={`${sport || 'Team'} role coverage`}
                         subColor="text-blue-400"
                         icon={Zap}
                     />
                 </motion.div>
                 <motion.div variants={fadeUp}>
                     <StatCard
-                        label="Positions Filled"
-                        value={`${filledPositionsCnt}/${safePositions.length}`}
-                        sub="Position coverage"
+                        label="Open Roles"
+                        value={openRolesCnt}
+                        sub="Positions still empty"
                         subColor="text-[#c9a896]"
                         icon={Target}
                     />
@@ -145,7 +143,7 @@ export default function Dashboard() {
 
                 <div className="h-[250px] sm:h-[300px] md:h-[360px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={performanceData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                        <LineChart data={performanceData} margin={{ top: 5, right: 8, left: 0, bottom: 5 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                             <XAxis dataKey="week" stroke="#F5F5DC" fontSize={11} tickMargin={10} tick={{ fill: 'rgba(245,245,220,0.50)' }} axisLine={false} tickLine={false} />
                             <YAxis stroke="#F5F5DC" fontSize={11} tickMargin={10} tick={{ fill: 'rgba(245,245,220,0.50)' }} axisLine={false} tickLine={false} />

@@ -4,67 +4,18 @@ import {
     Search, Bell, Plus, Check, Trash2, Shield, Target,
     Activity, Sliders, CheckCircle2, Flame, Award, ChevronRight, Layers, X
 } from "lucide-react";
-
-/* ─── Default Training Checklist by Sport ─────────────────────────────── */
-const DEFAULT_SPORT_ACTIVITIES = {
-    Football: [
-        { id: 1, text: "High-Pressing Rondo 5v2 (20 mins)", checked: true, category: "Tactical" },
-        { id: 2, text: "Corner Kick Far-Post Outswingers", checked: true, category: "Set Pieces" },
-        { id: 3, text: "Counter-Attack Transition Sprint (15 mins)", checked: false, category: "Conditioning" },
-        { id: 4, text: "Post-Session Hydrotherapy & Foam Rolling", checked: false, category: "Recovery" }
-    ],
-    Cricket: [
-        { id: 5, text: "Net Batting against Off-Spin & Pace", checked: true, category: "Tactical" },
-        { id: 6, text: "Slip Catching & High-Flyer Drills", checked: false, category: "Fielding" },
-        { id: 7, text: "Death-Overs Yorkbowling Scenarios", checked: true, category: "Bowling" },
-        { id: 8, text: "Match Simulation & Target Chasing", checked: false, category: "Strategy" }
-    ],
-    Rugby: [
-        { id: 9, text: "Scrum Engagement & Ruck Clearing", checked: true, category: "Physical" },
-        { id: 10, text: "Backline Passing & Blindside Overloads", checked: true, category: "Tactical" },
-        { id: 11, text: "Lineout Catch & Drive Drills", checked: false, category: "Set Pieces" },
-        { id: 12, text: "Tackle Breakdown & Jackal Practice", checked: false, category: "Defense" }
-    ],
-    Basketball: [
-        { id: 13, text: "Pick & Roll Defensive Coverage", checked: true, category: "Tactical" },
-        { id: 14, text: "3-Point Spot Shooting & Transition Threes", checked: false, category: "Offense" },
-        { id: 15, text: "Full-Court Press Breakout Scenarios", checked: true, category: "Conditioning" }
-    ],
-    Volleyball: [
-        { id: 16, text: "Overhead Setting & Middle-Block Spikes", checked: true, category: "Attack" },
-        { id: 17, text: "5-1 Rotation Serve-Receive Drills", checked: false, category: "Tactical" },
-        { id: 18, text: "Dig & Transition Counter-Attacks", checked: false, category: "Defense" }
-    ]
-};
-
-/* ─── Sport-Specific Preset Strategies ───────────────────────────────── */
-const SPORT_PRESET_TACTICS = {
-    Football: [
-        { id: "f1", name: "High-Pressing 4-3-3", phase: "Offensive Press", focus: "Possession & Wing Overload", intensity: "High" },
-        { id: "f2", name: "Low-Block Counter 4-4-2", phase: "Defensive Shape", focus: "Compactness & Quick Sprints", intensity: "Medium" }
-    ],
-    Cricket: [
-        { id: "c1", name: "Aggressive Powerplay Field", phase: "First 6 Overs", focus: "Slip Catcher & Full Length", intensity: "High" },
-        { id: "c2", name: "Death Overs Wide-Yorker Plan", phase: "Overs 16-20", focus: "Boundary Protection", intensity: "High" }
-    ],
-    Rugby: [
-        { id: "r1", name: "Standard 15s Phase Play", phase: "Attacking 22m", focus: "Heavy Ruck & Forward Carry", intensity: "High" },
-        { id: "r2", name: "Blindside Wing Overload", phase: "Set Piece Lineout", focus: "Fast Backline Pass", intensity: "Medium" }
-    ],
-    Basketball: [
-        { id: "b1", name: "2-3 Zone Trap Defense", phase: "Defensive Rotation", focus: "Wing Traps & Paint Lock", intensity: "High" },
-        { id: "b2", name: "Picks & Pop Motion Offense", phase: "Half-Court Sets", focus: "Spacer Threes", intensity: "Medium" }
-    ],
-    Volleyball: [
-        { id: "v1", name: "5-1 Rotation Offense", phase: "Serve Receive", focus: "Setter Acceleration", intensity: "High" }
-    ]
-};
+import {
+    getSportActivities,
+    getSportPresetTactics,
+    getSportDirectives,
+} from "../../constants/sports";
 
 export default function Tactics() {
     const { user } = useAuth();
     const sportName = user?.sport || "Football";
     // Scope storage per-user so tactics/checklists don't leak across accounts on a shared browser.
     const userKey = user?.id || "guest";
+    const sportDirectives = getSportDirectives(sportName);
 
     // ── Navigation & Active View ──
     const [activeTab, setActiveTab] = useState("creator"); // "creator" | "tracker" | "playbook"
@@ -72,7 +23,7 @@ export default function Tactics() {
     // ── Saved Tactics State ──
     const [tacticsList, setTacticsList] = useState(() => {
         const saved = localStorage.getItem(`tactics_list_${userKey}_${sportName}`);
-        return saved ? JSON.parse(saved) : (SPORT_PRESET_TACTICS[sportName] || SPORT_PRESET_TACTICS.Football);
+        return saved ? JSON.parse(saved) : getSportPresetTactics(sportName);
     });
 
     const [selectedTacticId, setSelectedTacticId] = useState(() => tacticsList[0]?.id || "");
@@ -90,7 +41,7 @@ export default function Tactics() {
     // ── Training Checklist State ──
     const [checklist, setChecklist] = useState(() => {
         const saved = localStorage.getItem(`checklist_${userKey}_${sportName}`);
-        return saved ? JSON.parse(saved) : (DEFAULT_SPORT_ACTIVITIES[sportName] || DEFAULT_SPORT_ACTIVITIES.Football);
+        return saved ? JSON.parse(saved) : getSportActivities(sportName);
     });
     const [newActivityText, setNewActivityText] = useState("");
     const [newActivityCategory, setNewActivityCategory] = useState("Tactical");
@@ -98,6 +49,18 @@ export default function Tactics() {
 
     // ── Search State ──
     const [searchQuery, setSearchQuery] = useState("");
+
+    // Reload sport-specific defaults when coach sport or account changes
+    useEffect(() => {
+        const savedTactics = localStorage.getItem(`tactics_list_${userKey}_${sportName}`);
+        const nextTactics = savedTactics ? JSON.parse(savedTactics) : getSportPresetTactics(sportName);
+        setTacticsList(nextTactics);
+        setSelectedTacticId(nextTactics[0]?.id || "");
+
+        const savedChecklist = localStorage.getItem(`checklist_${userKey}_${sportName}`);
+        setChecklist(savedChecklist ? JSON.parse(savedChecklist) : getSportActivities(sportName));
+        setSelectedCategoryFilter("All");
+    }, [userKey, sportName]);
 
     // ── Save checklist & tactics to local storage ──
     useEffect(() => {
@@ -134,6 +97,8 @@ export default function Tactics() {
         setTacticsList(updated);
         if (selectedTacticId === id && updated.length > 0) {
             setSelectedTacticId(updated[0].id);
+        } else if (updated.length === 0) {
+            setSelectedTacticId("");
         }
     };
 
@@ -323,22 +288,12 @@ export default function Tactics() {
                                     </h4>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
-                                            <span className="text-[#F5F5DC]/50 block mb-1">Pressing / Tempo Control</span>
-                                            <span className="text-[#F5F5DC] font-semibold">Aggressive Front Press</span>
-                                        </div>
-                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
-                                            <span className="text-[#F5F5DC]/50 block mb-1">Transition Directives</span>
-                                            <span className="text-[#F5F5DC] font-semibold">Quick Vertical Pass</span>
-                                        </div>
-                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
-                                            <span className="text-[#F5F5DC]/50 block mb-1">Defensive Compactness</span>
-                                            <span className="text-[#F5F5DC] font-semibold">Mid-Block Line</span>
-                                        </div>
-                                        <div className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
-                                            <span className="text-[#F5F5DC]/50 block mb-1">Set-Piece Focus</span>
-                                            <span className="text-[#F5F5DC] font-semibold">Far-Post Target Scheme</span>
-                                        </div>
+                                        {sportDirectives.map((directive) => (
+                                            <div key={directive.label} className="bg-[#262626] p-3 rounded-lg border border-[#483C32]/25">
+                                                <span className="text-[#F5F5DC]/50 block mb-1">{directive.label}</span>
+                                                <span className="text-[#F5F5DC] font-semibold">{directive.value}</span>
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
 

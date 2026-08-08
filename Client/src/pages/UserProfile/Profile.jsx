@@ -10,6 +10,7 @@ import twitterIcon  from "../../assets/twitter@1x.svg";
 import videoIcon    from "../../assets/video@1x.svg";
 import { useCoach } from "../../context/CoachContext";
 import { useAuth }  from "../../context/AuthContext";
+import { SPORTS } from "../../constants/sports";
 
 /* ── Modal wrapper ─────────────────────────────────────────────────── */
 const ModalOverlay = ({ onClose, children }) => (
@@ -308,7 +309,7 @@ export default function Profile() {
                                     onChange={(e) => updateProfileData({ sport: e.target.value })}
                                     className="text-xs bg-[#262626] border border-[#483C32]/50 rounded-xl px-3 py-1.5 text-[#F5F5DC] outline-none focus:border-[#a38b82] transition-colors appearance-none"
                                 >
-                                    {['Football','Cricket','Volleyball','Handball','Rugby'].map(s => (
+                                    {SPORTS.map(s => (
                                         <option key={s} value={s}>{s}</option>
                                     ))}
                                 </select>
