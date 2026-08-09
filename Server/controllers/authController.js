@@ -1,7 +1,17 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
 const Coach = require('../models/coachModel');
 
+const assertDbReady = (res) => {
+    if (mongoose.connection.readyState !== 1) {
+        res.status(503).json({
+            message: 'Database is unavailable. Check MONGO_URI and MongoDB Atlas network access on Render.'
+        });
+        return false;
+    }
+    return true;
+};
 // Generate JWT Token
 const generateToken = (id) => {
     const secret = process.env.JWT_SECRET;
@@ -15,10 +25,12 @@ const generateToken = (id) => {
 
 // Set secure auth cookie
 const setAuthCookie = (res, token) => {
+    const isProd = process.env.NODE_ENV === 'production';
     const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        // Cross-site (Netlify frontend → Render API) requires SameSite=None + Secure
+        secure: isProd,
+        sameSite: isProd ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     };
     res.cookie('token', token, cookieOptions);
@@ -51,6 +63,8 @@ const formatCoachResponse = (coach) => ({
 // Register new coach
 const registerCoach = async (req, res) => {
     try {
+        if (!assertDbReady(res)) return;
+
         const { name, email, password, sport } = req.body;
 
         // Strict Validation
@@ -114,6 +128,8 @@ const registerCoach = async (req, res) => {
 // Login coach
 const loginCoach = async (req, res) => {
     try {
+        if (!assertDbReady(res)) return;
+
         const { email, password } = req.body;
 
         if (!email || !password) {

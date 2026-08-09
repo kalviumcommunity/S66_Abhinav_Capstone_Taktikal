@@ -2,7 +2,10 @@
 
 **Production Link:** [https://taktikal.netlify.app/](https://taktikal.netlify.app/)
 
-Frontend and API both run on Netlify. The browser calls same-origin `/api` (Netlify Function wrapping Express) — not `localhost` — so no local-network permission prompts.
+- **Frontend:** Netlify (`taktikal.netlify.app`)
+- **Backend API:** Render (`https://s66-abhinav-capstone-taktikal.onrender.com`)
+- Set Netlify env `VITE_API_BASE_URL=https://s66-abhinav-capstone-taktikal.onrender.com/api`
+- Set Render env `CLIENT_URL=https://taktikal.netlify.app` and `NODE_ENV=production`
 
 ## 📌 Project Overview
 Taktikal is a modern web application designed for sports coaches to manage team rosters across multiple sports (Football, Cricket, Volleyball, Handball, Rugby, Basketball, Chess, Table Tennis, Badminton), plan sport-specific tactics and training checklists, track athlete performance metrics over time, and consult an AI Sports Coach Assistant for drills and recovery strategies.

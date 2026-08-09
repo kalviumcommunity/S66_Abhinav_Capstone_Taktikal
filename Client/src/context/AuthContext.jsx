@@ -15,13 +15,28 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-    // Never call localhost from a deployed HTTPS site — browsers show a
-    // "Access other apps and services on this device" permission prompt.
+    // Production must use the hosted Render API — never localhost (browser permission prompt)
+    // and never same-origin /api unless a Netlify Function is actually deployed.
+    const DEFAULT_PROD_API = 'https://s66-abhinav-capstone-taktikal.onrender.com/api';
     const rawApi = import.meta.env.VITE_API_BASE_URL;
-    const API_BASE_URL = (
-        import.meta.env.PROD && (!rawApi || /localhost|127\.0\.0\.1/.test(rawApi))
-    ) ? '/api' : (rawApi || 'http://localhost:3001/api');
+    const API_BASE_URL = import.meta.env.PROD
+        ? ((!rawApi || rawApi === '/api' || /localhost|127\.0\.0\.1/.test(rawApi))
+            ? DEFAULT_PROD_API
+            : rawApi)
+        : (rawApi || 'http://localhost:3001/api');
 
+    const readJson = async (response) => {
+        const text = await response.text();
+        try {
+            return text ? JSON.parse(text) : {};
+        } catch {
+            throw new Error(
+                response.ok
+                    ? 'Invalid server response'
+                    : `Server error (${response.status}). Is the API online?`
+            );
+        }
+    };
     // Check if user is authenticated on app load
     useEffect(() => {
         const checkAuth = async () => {
@@ -35,7 +50,7 @@ export const AuthProvider = ({ children }) => {
                 });
 
                 if (response.ok) {
-                    const data = await response.json();
+                    const data = await readJson(response);
                     setUser(data.coach);
                     if (storedToken) setToken(storedToken);
                 } else {
@@ -65,7 +80,7 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ email, password })
             });
 
-            const data = await response.json();
+            const data = await readJson(response);
 
             if (response.ok) {
                 setUser(data.coach);
@@ -79,7 +94,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
+            return { success: false, message: error.message || 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);
 
@@ -95,8 +110,7 @@ export const AuthProvider = ({ children }) => {
                 body: JSON.stringify({ name, email, password, sport })
             });
 
-            const data = await response.json();
-
+            const data = await readJson(response);
             if (response.ok) {
                 setUser(data.coach);
                 if (data.token) {
@@ -109,7 +123,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Register error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
+            return { success: false, message: error.message || 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);
 
@@ -140,7 +154,7 @@ export const AuthProvider = ({ children }) => {
                 },
                 credentials: 'include'
             });
-            const data = await response.json();
+            const data = await readJson(response);
             if (response.ok) {
                 return { success: true, message: data.message, debugOtp: data.debugOtp };
             } else {
@@ -148,7 +162,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Send OTP error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
+            return { success: false, message: error.message || 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);
 
@@ -165,7 +179,7 @@ export const AuthProvider = ({ children }) => {
                 credentials: 'include',
                 body: JSON.stringify({ otp })
             });
-            const data = await response.json();
+            const data = await readJson(response);
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
@@ -173,7 +187,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Verify OTP error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
+            return { success: false, message: error.message || 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);
 
@@ -190,7 +204,7 @@ export const AuthProvider = ({ children }) => {
                 credentials: 'include',
                 body: JSON.stringify({ otp, newPassword })
             });
-            const data = await response.json();
+            const data = await readJson(response);
             if (response.ok) {
                 return { success: true, message: data.message };
             } else {
@@ -198,7 +212,7 @@ export const AuthProvider = ({ children }) => {
             }
         } catch (error) {
             console.error('Change password error:', error);
-            return { success: false, message: 'Network error. Please try again.' };
+            return { success: false, message: error.message || 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);
 
@@ -213,7 +227,7 @@ export const AuthProvider = ({ children }) => {
                 },
                 credentials: 'include'
             });
-            const data = await response.json();
+            const data = await readJson(response);
             if (response.ok) {
                 setUser(null);
                 setToken(null);
@@ -222,8 +236,7 @@ export const AuthProvider = ({ children }) => {
             } else {
                 return { success: false, message: data.message };
             }
-        } catch (error) {
-            console.error('Delete account error:', error);
+        } catch (error) {            console.error('Delete account error:', error);
             return { success: false, message: 'Network error. Please try again.' };
         }
     }, [API_BASE_URL]);

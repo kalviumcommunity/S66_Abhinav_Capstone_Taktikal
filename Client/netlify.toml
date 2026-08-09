@@ -1,29 +1,13 @@
 [build]
-  command = "npm run build && npm install --prefix ../Server && npm install serverless-http --prefix ../Server"
+  command = "npm run build"
   publish = "dist"
-  functions = "netlify/functions"
 
 [build.environment]
   NODE_VERSION = "20"
-  VITE_API_BASE_URL = "/api"
+  # Point the SPA at the Render backend (not localhost, not Netlify /api)
+  VITE_API_BASE_URL = "https://s66-abhinav-capstone-taktikal.onrender.com/api"
 
-[functions]
-  node_bundler = "nft"
-  included_files = ["../Server/**"]
-
-# Same-origin API — avoids Chrome "access other apps/services on this device" (localhost) prompt
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api"
-  to = "/.netlify/functions/api"
-  status = 200
-  force = true
-
+# SPA fallback only — API lives on Render
 [[redirects]]
   from = "/*"
   to = "/index.html"

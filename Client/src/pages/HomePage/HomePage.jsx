@@ -372,8 +372,19 @@ const HomePage = () => {
                                 <span className="block text-xs font-semibold text-[#F5F5DC]/40 uppercase tracking-wider mb-2">LET'S BUILD SOMETHING GREAT.</span>
                                 <h4 className="text-2xl font-bold text-[#F5F5DC] leading-tight">Get in touch with Taktikal.</h4>
                             </div>
-                            <form action="mailto:abhinavv0215@gmail.com" method="GET" className="lg:col-span-3 space-y-4">
-                                <input type="hidden" name="subject" value="Taktikal Inquiry" />
+                            <form
+                                onSubmit={(e) => {
+                                    e.preventDefault()
+                                    const fd = new FormData(e.currentTarget)
+                                    const name = String(fd.get('name') || '').trim()
+                                    const email = String(fd.get('email') || '').trim()
+                                    const message = String(fd.get('body') || '').trim()
+                                    const subject = encodeURIComponent('Taktikal Inquiry')
+                                    const body = encodeURIComponent(`From: ${name} <${email}>\n\n${message}`)
+                                    window.location.href = `mailto:abhinavv0215@gmail.com?subject=${subject}&body=${body}`
+                                }}
+                                className="lg:col-span-3 space-y-4"
+                            >
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <input
                                         type="text"

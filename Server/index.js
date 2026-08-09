@@ -34,11 +34,16 @@ app.use(helmet({
 const allowedOrigin = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(cors({
     origin: function (origin, callback) {
-        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-        if (!origin || origin === allowedOrigin || origin.includes("netlify.app")) {
+        // Allow local dev, configured client, and Netlify frontend
+        if (
+            !origin ||
+            origin === allowedOrigin ||
+            origin.includes("netlify.app") ||
+            origin.includes("localhost")
+        ) {
             return callback(null, true);
         }
-        return callback(null, true); // Permissive fallback for dev / Netlify deployments
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
