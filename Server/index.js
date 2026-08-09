@@ -120,7 +120,7 @@ app.use('*', (req, res) => {
     res.status(404).json({ message: 'Route not found' });
 });
 
-if (process.env.NODE_ENV !== 'test') {
+if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`🚀 Taktikal Server running on port ${PORT}`);
     });

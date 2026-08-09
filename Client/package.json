@@ -20,6 +20,7 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.2.0",
     "recharts": "^2.15.1",
+    "serverless-http": "^4.0.0",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.0.7"
   },

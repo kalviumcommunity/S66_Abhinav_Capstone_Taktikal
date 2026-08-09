@@ -1,0 +1,30 @@
+[build]
+  command = "npm run build && npm install --prefix ../Server && npm install serverless-http --prefix ../Server"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_BASE_URL = "/api"
+
+[functions]
+  node_bundler = "nft"
+  included_files = ["../Server/**"]
+
+# Same-origin API — avoids Chrome "access other apps/services on this device" (localhost) prompt
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api"
+  to = "/.netlify/functions/api"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const DbConnection = async () => {
     try {
+        // Reuse existing connection (important for serverless cold/warm starts)
+        if (mongoose.connection.readyState === 1) {
+            return true;
+        }
+
         const mongoURI = process.env.MONGO_URI;
 
         if (!mongoURI) {

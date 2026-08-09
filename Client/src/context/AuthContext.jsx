@@ -15,7 +15,12 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
+    // Never call localhost from a deployed HTTPS site — browsers show a
+    // "Access other apps and services on this device" permission prompt.
+    const rawApi = import.meta.env.VITE_API_BASE_URL;
+    const API_BASE_URL = (
+        import.meta.env.PROD && (!rawApi || /localhost|127\.0\.0\.1/.test(rawApi))
+    ) ? '/api' : (rawApi || 'http://localhost:3001/api');
 
     // Check if user is authenticated on app load
     useEffect(() => {
