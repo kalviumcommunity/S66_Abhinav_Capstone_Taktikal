@@ -5,6 +5,7 @@ const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
+const mongoose = require("mongoose");
 const DbConnection = require("./db/DbConnection");
 
 // Routes importing
@@ -109,7 +110,16 @@ app.get('/', (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date() });
+    const states = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+    res.json({
+        status: 'ok',
+        timestamp: new Date(),
+        database: {
+            state: states[mongoose.connection.readyState] || String(mongoose.connection.readyState),
+            ready: mongoose.connection.readyState === 1,
+            hasMongoUri: Boolean(process.env.MONGO_URI),
+        }
+    });
 });
 
 // Error handling middleware (Sanitizes internal server details)

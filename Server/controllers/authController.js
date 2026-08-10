@@ -3,14 +3,22 @@ const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const Coach = require('../models/coachModel');
 
-const assertDbReady = (res) => {
-    if (mongoose.connection.readyState !== 1) {
-        res.status(503).json({
-            message: 'Database is unavailable. Check MONGO_URI and MongoDB Atlas network access on Render.'
-        });
-        return false;
+const assertDbReady = async (res) => {
+    if (mongoose.connection.readyState === 1) return true;
+
+    // Retry once — covers cold start / env fixed after boot
+    try {
+        const DbConnection = require('../db/DbConnection');
+        const ok = await DbConnection();
+        if (ok && mongoose.connection.readyState === 1) return true;
+    } catch (_) {
+        // fall through
     }
-    return true;
+
+    res.status(503).json({
+        message: 'Database is unavailable. On Render: set MONGO_URI (no quotes), restart the service, and allow 0.0.0.0/0 in Atlas Network Access.'
+    });
+    return false;
 };
 // Generate JWT Token
 const generateToken = (id) => {
@@ -63,8 +71,6 @@ const formatCoachResponse = (coach) => ({
 // Register new coach
 const registerCoach = async (req, res) => {
     try {
-        if (!assertDbReady(res)) return;
-
         const { name, email, password, sport } = req.body;
 
         // Strict Validation
@@ -80,6 +86,8 @@ const registerCoach = async (req, res) => {
         if (password.length < 6) {
             return res.status(400).json({ message: 'Password must be at least 6 characters long' });
         }
+
+        if (!(await assertDbReady(res))) return;
 
         const normalizedEmail = email.trim().toLowerCase();
 
@@ -128,13 +136,13 @@ const registerCoach = async (req, res) => {
 // Login coach
 const loginCoach = async (req, res) => {
     try {
-        if (!assertDbReady(res)) return;
-
         const { email, password } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ message: 'Please provide email and password' });
         }
+
+        if (!(await assertDbReady(res))) return;
 
         const normalizedEmail = email.trim().toLowerCase();
 

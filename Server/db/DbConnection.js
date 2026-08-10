@@ -2,9 +2,28 @@ const mongoose = require("mongoose");
 
 const DbConnection = async () => {
     try {
-        // Reuse existing connection (important for serverless cold/warm starts)
+        // 1 = connected, 2 = connecting
         if (mongoose.connection.readyState === 1) {
             return true;
+        }
+        if (mongoose.connection.readyState === 2) {
+            await new Promise((resolve, reject) => {
+                const onConnected = () => {
+                    cleanup();
+                    resolve();
+                };
+                const onError = (err) => {
+                    cleanup();
+                    reject(err);
+                };
+                const cleanup = () => {
+                    mongoose.connection.off('connected', onConnected);
+                    mongoose.connection.off('error', onError);
+                };
+                mongoose.connection.once('connected', onConnected);
+                mongoose.connection.once('error', onError);
+            });
+            return mongoose.connection.readyState === 1;
         }
 
         const mongoURI = process.env.MONGO_URI;
@@ -13,14 +32,17 @@ const DbConnection = async () => {
             throw new Error("MONGO_URI environment variable is missing.");
         }
 
+        // Common Render mistake: pasting URI wrapped in quotes
+        const cleanedURI = mongoURI.trim().replace(/^['"]|['"]$/g, '');
+
         const options = {
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 10000,
             socketTimeoutMS: 45000,
             maxPoolSize: 10
         };
 
         console.log('Attempting to connect to MongoDB...');
-        const conn = await mongoose.connect(mongoURI, options);
+        const conn = await mongoose.connect(cleanedURI, options);
         console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
 
         mongoose.connection.on('error', (err) => {
