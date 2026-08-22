@@ -4,10 +4,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  # Point the SPA at the Render backend (not localhost, not Netlify /api)
-  VITE_API_BASE_URL = "https://s66-abhinav-capstone-taktikal.onrender.com/api"
 
-# SPA fallback only — API lives on Render
 [[redirects]]
   from = "/*"
   to = "/index.html"
