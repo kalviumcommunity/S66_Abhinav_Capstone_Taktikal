@@ -3,8 +3,7 @@
 **Production Link:** [https://taktikal.netlify.app/](https://taktikal.netlify.app/)
 
 - **Frontend:** Netlify (`taktikal.netlify.app`)
-- **Backend API:** Render (`https://s66-abhinav-capstone-taktikal.onrender.com`)
-- Set Netlify env `VITE_API_BASE_URL=https://s66-abhinav-capstone-taktikal.onrender.com/api`
+- **Backend API:** Render (Express server — set `VITE_API_BASE_URL` in Netlify to your Render `/api` URL)
 - Set Render env `CLIENT_URL=https://taktikal.netlify.app` and `NODE_ENV=production`
 
 ## 📌 Project Overview

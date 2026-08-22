@@ -15,15 +15,16 @@ export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-    // Production must use the hosted Render API — never localhost (browser permission prompt)
-    // and never same-origin /api unless a Netlify Function is actually deployed.
-    const DEFAULT_PROD_API = 'https://s66-abhinav-capstone-taktikal.onrender.com/api';
-    const rawApi = import.meta.env.VITE_API_BASE_URL;
+    // Production API URL comes from Netlify env: VITE_API_BASE_URL (set in dashboard).
+    // Never use localhost in production — browsers show a local-network permission prompt.
+    const rawApi = import.meta.env.VITE_API_BASE_URL?.trim();
     const API_BASE_URL = import.meta.env.PROD
-        ? ((!rawApi || rawApi === '/api' || /localhost|127\.0\.0\.1/.test(rawApi))
-            ? DEFAULT_PROD_API
-            : rawApi)
+        ? (rawApi && !/localhost|127\.0\.0\.1/.test(rawApi) ? rawApi : '')
         : (rawApi || 'http://localhost:3001/api');
+
+    if (import.meta.env.PROD && !API_BASE_URL) {
+        console.error('VITE_API_BASE_URL is not set in Netlify environment variables.');
+    }
 
     const readJson = async (response) => {
         const text = await response.text();
