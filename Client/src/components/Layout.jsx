@@ -1,4 +1,5 @@
 import Sidebar from './Sidebar'
+import FloatingChatbot from './FloatingChatbot'
 import { motion } from 'framer-motion'
 
 const Layout = ({ children }) => {
@@ -44,6 +45,8 @@ const Layout = ({ children }) => {
           {children}
         </div>
       </div>
+
+      <FloatingChatbot />
     </div>
   )
 }

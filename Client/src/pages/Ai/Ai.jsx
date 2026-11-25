@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Bell, Send, Sparkles, Lightbulb, Star, RefreshCw } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { buildSportKnowledgeBase } from "../../constants/sports";
+import { sendAiChatMessage } from "../../utils/aiService";
 
 /* ─── Page Header ─────────────────────────────────────────────────────── */
 const PageHeader = ({ title, subtitle, children }) => (
@@ -16,12 +16,10 @@ const PageHeader = ({ title, subtitle, children }) => (
 );
 
 export default function AIAssistant() {
-    const { user } = useAuth();
+    const { user, token, API_BASE_URL } = useAuth();
     const sportName = user?.sport || "Football";
 
-    const knowledgeBase = useMemo(() => buildSportKnowledgeBase(sportName), [sportName]);
-
-    const welcomeText = `Hello Coach! I'm your ${sportName} AI assistant. Click a prompt below or ask about tactics, training, recovery, or analytics for ${sportName}.`;
+    const welcomeText = `Hello Coach! I'm your ${sportName} AI assistant powered by Groq LLM. Ask me anything about tactics, training drills, athlete recovery, nutrition, or your team roster.`;
 
     const [messages, setMessages] = useState([{ from: "bot", text: welcomeText }]);
     const [input, setInput] = useState("");
@@ -42,55 +40,35 @@ export default function AIAssistant() {
         scrollToBottom();
     }, [messages, isTyping]);
 
-    const getAnswerForQuery = (queryText) => {
-        const lower = queryText.toLowerCase().trim();
+    const handleSendMessage = async (textToSend) => {
+        const q = (textToSend || input).trim();
+        if (!q || isTyping) return;
 
-        const exactMatch = knowledgeBase.find((kb) => kb.question.toLowerCase() === lower);
-        if (exactMatch) return exactMatch.answer;
-
-        let bestMatch = null;
-        let highestScore = 0;
-
-        knowledgeBase.forEach((kb) => {
-            let score = 0;
-            kb.keywords.forEach((kw) => {
-                if (lower.includes(kw)) score += 2;
-            });
-            if (score > highestScore) {
-                highestScore = score;
-                bestMatch = kb;
-            }
-        });
-
-        if (bestMatch && highestScore > 0) {
-            return bestMatch.answer;
-        }
-
-        return `🎯 Coach AI Analysis (${sportName}):
-
-Thank you for your question regarding "${queryText}".
-
-Key Recommendations:
-1. Keep drills specific to ${sportName.toLowerCase()} match situations.
-2. Monitor workload and fatigue with daily athlete feedback.
-3. Align session plans with the strategies in your ${sportName} tactics playbook.
-
-Ask for training schedules, recovery protocols, or tactical breakdowns anytime.`;
-    };
-
-    const handleSendMessage = (textToSend) => {
-        const q = textToSend || input;
-        if (!q.trim()) return;
-
+        const currentHistory = messages.slice(1); // Exclude initial greeting
         setMessages((prev) => [...prev, { from: "user", text: q }]);
         setInput("");
         setIsTyping(true);
 
-        setTimeout(() => {
-            const answer = getAnswerForQuery(q);
-            setMessages((prev) => [...prev, { from: "bot", text: answer }]);
+        try {
+            const reply = await sendAiChatMessage({
+                apiBaseUrl: API_BASE_URL,
+                token,
+                message: q,
+                messages: currentHistory,
+            });
+            setMessages((prev) => [...prev, { from: "bot", text: reply }]);
+        } catch (err) {
+            setMessages((prev) => [
+                ...prev,
+                {
+                    from: "bot",
+                    text: `⚠️ ${err.message || "Unable to reach AI Coach right now. Please try again."}`,
+                    isError: true,
+                },
+            ]);
+        } finally {
             setIsTyping(false);
-        }, 600);
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -279,7 +257,7 @@ Ask for training schedules, recovery protocols, or tactical breakdowns anytime.`
                         />
                         <button
                             onClick={() => handleSendMessage()}
-                            disabled={!input.trim()}
+                            disabled={!input.trim() || isTyping}
                             className="min-w-11 min-h-11 w-11 h-11 flex items-center justify-center rounded-xl bg-[#483C32] hover:bg-[#5a4a3e] disabled:opacity-35 disabled:cursor-not-allowed text-[#F5F5DC] transition-all flex-shrink-0 border border-[#483C32] cursor-pointer"
                             aria-label="Send message"
                         >

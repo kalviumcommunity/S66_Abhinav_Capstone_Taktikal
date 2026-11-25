@@ -12,6 +12,7 @@ const DbConnection = require("./db/DbConnection");
 const authRoutes = require("./routes/authRoutes");
 const athleteRoutes = require("./routes/athleteRoutes");
 const performanceRoutes = require("./routes/performanceRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 
 // Database connection
 DbConnection().then((connected) => {
@@ -92,6 +93,7 @@ app.use("/api/auth/register", authLimiter);
 app.use("/api/auth", authRoutes);
 app.use("/api/athletes", athleteRoutes);
 app.use("/api/performance", performanceRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Root route
 app.get('/', (req, res) => {
